@@ -1,0 +1,10 @@
+{
+  "name": "@tree-sitter-highlight/build-plugins",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./wasm-inline": "./src/vite-plugin-wasm-inline.ts",
+    "./wasm-copy": "./src/vite-plugin-wasm-copy.ts"
+  }
+}

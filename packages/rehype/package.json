@@ -1,0 +1,41 @@
+{
+  "name": "@tree-sitter-highlight/rehype",
+  "version": "0.1.0",
+  "description": "rehype plugin for tree-sitter syntax highlighting",
+  "keywords": [
+    "tree-sitter",
+    "highlight",
+    "rehype",
+    "unified",
+    "astro"
+  ],
+  "homepage": "https://github.com/simeonoff/tree-sitter-highlight-web#readme",
+  "bugs": {
+    "url": "https://github.com/simeonoff/tree-sitter-highlight-web/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simeonoff/tree-sitter-highlight-web.git",
+    "directory": "packages/rehype"
+  },
+  "license": "MIT",
+  "author": "Simeon Simeonoff",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@tree-sitter-highlight/core": "^0.1.0"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "name": "@tree-sitter-highlight/wasm",
+  "version": "0.1.0",
+  "description": "Inlined web-tree-sitter WASM binary for @tree-sitter-highlight",
+  "keywords": [
+    "tree-sitter",
+    "wasm",
+    "web-tree-sitter"
+  ],
+  "homepage": "https://github.com/simeonoff/tree-sitter-highlight-web#readme",
+  "bugs": {
+    "url": "https://github.com/simeonoff/tree-sitter-highlight-web/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simeonoff/tree-sitter-highlight-web.git",
+    "directory": "packages/wasm"
+  },
+  "license": "MIT",
+  "author": "Simeon Simeonoff",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "development": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./web-tree-sitter.wasm": "./dist/web-tree-sitter.wasm"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "web-tree-sitter": "^0.26.6"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "name": "@tree-sitter-highlight/web",
+  "version": "0.1.0",
+  "description": "Parser-accurate syntax highlighting for the web, powered by tree-sitter WASM grammars",
+  "keywords": [
+    "tree-sitter",
+    "highlight",
+    "syntax",
+    "web",
+    "wasm",
+    "vite",
+    "vitepress",
+    "rehype",
+    "markdown-it",
+    "tree-sitter-highlight-web"
+  ],
+  "homepage": "https://github.com/simeonoff/tree-sitter-highlight-web#readme",
+  "bugs": {
+    "url": "https://github.com/simeonoff/tree-sitter-highlight-web/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simeonoff/tree-sitter-highlight-web.git",
+    "directory": "packages/web"
+  },
+  "license": "MIT",
+  "author": "Simeon Simeonoff",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "development": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@tree-sitter-highlight/core": "^0.1.0",
+    "@tree-sitter-highlight/wasm": "^0.1.0"
+  }
+}
