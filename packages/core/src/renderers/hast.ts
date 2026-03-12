@@ -16,8 +16,13 @@ import { captureNameToClass } from './html';
  *
  * @param events - The line-wrapped event stream from `generateEvents()`
  * @param source - The original source code string
+ * @param theme - Optional theme name, sets `data-theme` attribute on the `<pre>` element
  */
-export function renderHast(events: HighlightEvent[], source: string): HastRoot {
+export function renderHast(
+  events: HighlightEvent[],
+  source: string,
+  theme?: string,
+): HastRoot {
   const codeChildren: HastNode[] = [];
 
   // The current line span element (set on line-start, pushed to codeChildren on line-end)
@@ -92,10 +97,18 @@ export function renderHast(events: HighlightEvent[], source: string): HastRoot {
     children: codeChildren,
   };
 
+  const preProperties: Record<string, string | number | boolean | string[]> = {
+    className: ['tsh'],
+  };
+
+  if (theme) {
+    preProperties.dataTheme = theme;
+  }
+
   const pre: HastElement = {
     type: 'element',
     tagName: 'pre',
-    properties: { className: ['tsh'] },
+    properties: preProperties,
     children: [code],
   };
 

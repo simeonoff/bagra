@@ -56,9 +56,6 @@ export interface HighlighterOptions {
   languages?: Record<string, LanguageDefinition>;
 }
 
-/**
- * A single highlighted token in the source code.
- */
 export interface Token {
   /** The text content of this token. */
   text: string;
@@ -103,6 +100,33 @@ export type HighlightEvent =
   | { type: 'source'; start: number; end: number };
 
 /**
+ * Options for the `codeToHtml()` and `codeToHast()` output methods.
+ */
+export interface CodeOptions {
+  /**
+   * Theme name to apply to the output.
+   *
+   * Sets a `data-theme` attribute on the `<pre>` element, which can be used
+   * to scope Base16 scheme variables via CSS:
+   *
+   * ```css
+   * .tsh[data-theme="nord"] {
+   *   --base00: #2e3440;
+   *   --base05: #d8dee9;
+   *   ...
+   * }
+   * ```
+   *
+   * @example
+   * ```ts
+   * highlighter.codeToHtml('scss', code, { theme: 'nord' });
+   * // => <pre class="tsh" data-theme="nord"><code>...</code></pre>
+   * ```
+   */
+  theme?: string;
+}
+
+/**
  * The public highlighter interface returned by `createHighlighter()`.
  */
 export interface Highlighter {
@@ -112,15 +136,21 @@ export interface Highlighter {
    * The output is a `<pre class="tsh"><code>...</code></pre>` block with
    * `<span>` elements for each highlighted region. Capture names are converted
    * to CSS classes: `@keyword.function` becomes `class="tsh-keyword-function"`.
+   *
+   * Import the mapping CSS to apply theme colors:
+   *
+   * ```ts
+   * import '@tree-sitter-highlight/core/theme.css';
+   * ```
    */
-  codeToHtml(lang: string, code: string): string;
+  codeToHtml(lang: string, code: string, options?: CodeOptions): string;
 
   /**
    * Highlight source code and return a HAST (Hypertext Abstract Syntax Tree).
    *
    * The output can be used directly in unified/rehype pipelines.
    */
-  codeToHast(lang: string, code: string): HastRoot;
+  codeToHast(lang: string, code: string, options?: CodeOptions): HastRoot;
 
   /**
    * Highlight source code and return an array of lines, each containing

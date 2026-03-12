@@ -177,6 +177,32 @@ describe('renderHast', () => {
     expect((line2.children[0] as HastText).value).toBe('cd');
   });
 
+  it('sets dataTheme property on <pre> when theme is provided', () => {
+    const events: HighlightEvent[] = [
+      { type: 'line-start' },
+      { type: 'source', start: 0, end: 5 },
+      { type: 'line-end' },
+    ];
+    const root = renderHast(events, 'hello', 'nord');
+    const pre = root.children[0] as HastElement;
+
+    expect(pre.properties.className).toEqual(['tsh']);
+    expect(pre.properties.dataTheme).toBe('nord');
+  });
+
+  it('does not set dataTheme when theme is undefined', () => {
+    const events: HighlightEvent[] = [
+      { type: 'line-start' },
+      { type: 'source', start: 0, end: 5 },
+      { type: 'line-end' },
+    ];
+    const root = renderHast(events, 'hello');
+    const pre = root.children[0] as HastElement;
+
+    expect(pre.properties.className).toEqual(['tsh']);
+    expect(pre.properties).not.toHaveProperty('dataTheme');
+  });
+
   it('renders empty lines as empty span.line elements', () => {
     // Source: "a\n\nb"
     const source = 'a\n\nb';

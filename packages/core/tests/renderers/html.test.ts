@@ -162,6 +162,36 @@ describe('renderHtml', () => {
     expect(html).toContain('class="tsh-punctuation-delimiter"');
   });
 
+  it('emits data-theme attribute on <pre> when theme is provided', () => {
+    const events: HighlightEvent[] = [
+      { type: 'line-start' },
+      { type: 'source', start: 0, end: 5 },
+      { type: 'line-end' },
+    ];
+    const html = renderHtml(events, 'hello', 'nord');
+    expect(html).toMatch(/^<pre class="tsh" data-theme="nord"><code>/);
+  });
+
+  it('does not emit data-theme when theme is undefined', () => {
+    const events: HighlightEvent[] = [
+      { type: 'line-start' },
+      { type: 'source', start: 0, end: 5 },
+      { type: 'line-end' },
+    ];
+    const html = renderHtml(events, 'hello');
+    expect(html).toMatch(/^<pre class="tsh"><code>/);
+    expect(html).not.toContain('data-theme');
+  });
+
+  it('escapes HTML special characters in theme name', () => {
+    const events: HighlightEvent[] = [
+      { type: 'line-start' },
+      { type: 'line-end' },
+    ];
+    const html = renderHtml(events, '', 'a"b<c');
+    expect(html).toContain('data-theme="a&quot;b&lt;c"');
+  });
+
   it('renders multi-line output with \\n between line spans', () => {
     // Two lines: "ab" and "cd"
     const source = 'ab\ncd';

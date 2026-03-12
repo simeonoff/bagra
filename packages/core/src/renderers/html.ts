@@ -35,9 +35,17 @@ function escapeHtml(text: string): string {
  *
  * @param events - The line-wrapped event stream from `generateEvents()`
  * @param source - The original source code string
+ * @param theme - Optional theme name, sets `data-theme` attribute on the `<pre>` element
  */
-export function renderHtml(events: HighlightEvent[], source: string): string {
-  const parts: string[] = ['<pre class="tsh"><code>'];
+export function renderHtml(
+  events: HighlightEvent[],
+  source: string,
+  theme?: string,
+): string {
+  const preAttrs = theme
+    ? `class="tsh" data-theme="${escapeHtml(theme)}"`
+    : 'class="tsh"';
+  const parts: string[] = [`<pre ${preAttrs}><code>`];
   let isFirstLine = true;
 
   for (const event of events) {

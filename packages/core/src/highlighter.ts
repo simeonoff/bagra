@@ -1,5 +1,4 @@
 import { Language, Parser, Query } from 'web-tree-sitter';
-import { captureNodes } from './pipeline/capture';
 import { deduplicateCaptures } from './pipeline/deduplicate';
 import { generateEvents } from './pipeline/events';
 import { renderHast } from './renderers/hast';
@@ -7,6 +6,7 @@ import { renderHtml } from './renderers/html';
 import { renderTokens } from './renderers/tokens';
 import { resolveHighlights } from './resolve-highlights';
 import type {
+  CodeOptions,
   HastRoot,
   Highlighter,
   HighlighterOptions,
@@ -47,17 +47,73 @@ async function initParser(
 }
 
 /**
+ * Known neovim-specific predicates that web-tree-sitter does not handle.
+ * When encountered, the library warns because they are silently treated as
+ * always-true, which can cause incorrect highlight assignments.
+ *
+ * @see https://neovim.io/doc/user/treesitter.html#treesitter-predicates
+ */
+const UNSUPPORTED_PREDICATES = new Set([
+  'lua-match?',
+  'not-lua-match?',
+  'vim-match?',
+  'not-vim-match?',
+  'contains?',
+  'not-contains?',
+  'has-ancestor?',
+  'not-has-ancestor?',
+  'has-parent?',
+  'not-has-parent?',
+]);
+
+/**
+ * Inspect a query for unsupported predicates (e.g. neovim-specific ones)
+ * and emit a console warning. These predicates are silently treated as
+ * always-true by web-tree-sitter, which can cause incorrect highlights.
+ */
+function warnUnsupportedPredicates(query: Query, languageName: string): void {
+  const found = new Map<string, number>();
+
+  for (const patternPredicates of query.predicates) {
+    for (const predicate of patternPredicates) {
+      const op = predicate.operator;
+
+      if (UNSUPPORTED_PREDICATES.has(op)) {
+        found.set(op, (found.get(op) ?? 0) + 1);
+      }
+    }
+  }
+
+  if (found.size > 0) {
+    const details = [...found.entries()]
+      .map(([op, count]) => `#${op} (${count}×)`)
+      .join(', ');
+
+    console.warn(
+      `[tree-sitter-highlight] Language "${languageName}": highlights query ` +
+        `contains unsupported predicates: ${details}. ` +
+        'These predicates are silently ignored by web-tree-sitter and treated ' +
+        'as always matching, which may cause incorrect highlighting. ' +
+        'Replace them with portable equivalents (e.g. #match? instead of #lua-match?).',
+    );
+  }
+}
+
+/**
  * Load a single language definition into a tree-sitter Language + Query pair.
  *
  * Resolves the highlights query from a file path/URL if a string is provided,
  * or uses the content directly if `{ content: string }` is provided.
  */
 async function loadLanguage(
+  name: string,
   definition: LanguageDefinition,
 ): Promise<LoadedLanguage> {
   const language = await Language.load(definition.grammar);
   const highlightsContent = await resolveHighlights(definition.highlights);
   const query = new Query(language, highlightsContent);
+
+  warnUnsupportedPredicates(query, name);
 
   return { language, query, highlights: highlightsContent };
 }
@@ -93,12 +149,11 @@ export async function createHighlighter(
   const languages = new Map<string, LoadedLanguage>();
   let disposed = false;
 
-  // Load initial languages
   if (options.languages) {
     const entries = Object.entries(options.languages);
     const loaded = await Promise.all(
       entries.map(async ([name, def]) => {
-        const lang = await loadLanguage(def);
+        const lang = await loadLanguage(name, def);
         return [name, lang] as const;
       }),
     );
@@ -142,7 +197,7 @@ export async function createHighlighter(
     }
 
     try {
-      const captures = captureNodes(loaded.query, tree.rootNode);
+      const captures = loaded.query.captures(tree.rootNode);
       const deduplicated = deduplicateCaptures(captures);
       const events = generateEvents(deduplicated, code.length, code);
 
@@ -153,14 +208,14 @@ export async function createHighlighter(
   }
 
   return {
-    codeToHtml(lang: string, code: string): string {
+    codeToHtml(lang: string, code: string, options?: CodeOptions): string {
       const { events, code: src } = highlight(lang, code);
-      return renderHtml(events, src);
+      return renderHtml(events, src, options?.theme);
     },
 
-    codeToHast(lang: string, code: string): HastRoot {
+    codeToHast(lang: string, code: string, options?: CodeOptions): HastRoot {
       const { events, code: src } = highlight(lang, code);
-      return renderHast(events, src);
+      return renderHast(events, src, options?.theme);
     },
 
     codeToTokens(lang: string, code: string): Token[][] {
@@ -174,7 +229,7 @@ export async function createHighlighter(
     ): Promise<void> {
       assertNotDisposed();
 
-      const lang = await loadLanguage(definition);
+      const lang = await loadLanguage(name, definition);
       languages.set(name, lang);
     },
 
@@ -190,14 +245,11 @@ export async function createHighlighter(
       if (disposed) return;
       disposed = true;
 
-      // Delete all queries
       for (const loaded of languages.values()) {
         loaded.query.delete();
       }
 
       languages.clear();
-
-      // Delete the parser
       parser.delete();
     },
   };

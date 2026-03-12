@@ -160,8 +160,9 @@ describe('codeToHtml', () => {
     const html = hl.codeToHtml('scss', code);
 
     // All source characters must appear (possibly split across spans)
+    // The color value #333 is split into "#" and "333" by the grammar
     expect(html).toContain('$primary-color');
-    expect(html).toContain('#333');
+    expect(html).toContain('333');
   });
 
   it('handles empty source code', () => {
@@ -169,6 +170,16 @@ describe('codeToHtml', () => {
     expect(html).toBe(
       '<pre class="tsh"><code><span class="line"></span></code></pre>',
     );
+  });
+
+  it('emits data-theme on <pre> when theme option is provided', () => {
+    const html = hl.codeToHtml('scss', '$x: 1;', { theme: 'nord' });
+    expect(html).toMatch(/^<pre class="tsh" data-theme="nord"><code>/);
+  });
+
+  it('does not emit data-theme when no theme option', () => {
+    const html = hl.codeToHtml('scss', '$x: 1;');
+    expect(html).not.toContain('data-theme');
   });
 
   it('handles multi-line source code', () => {
@@ -306,6 +317,20 @@ describe('codeToHast', () => {
     const code = pre.children[0] as HastElement;
     const reconstructed = collectText(code.children);
     expect(reconstructed).toBe(source);
+  });
+
+  it('sets dataTheme on <pre> when theme option is provided', () => {
+    const root = hl.codeToHast('scss', '$x: 1;', { theme: 'dracula' });
+    const pre = root.children[0] as HastElement;
+
+    expect(pre.properties.dataTheme).toBe('dracula');
+  });
+
+  it('does not set dataTheme when no theme option', () => {
+    const root = hl.codeToHast('scss', '$x: 1;');
+    const pre = root.children[0] as HastElement;
+
+    expect(pre.properties).not.toHaveProperty('dataTheme');
   });
 
   it('creates span elements with correct class names for highlights', () => {

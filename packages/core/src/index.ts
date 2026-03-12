@@ -29,6 +29,7 @@
  */
 export { createHighlighter } from './highlighter';
 export type {
+  CodeOptions,
   HastElement,
   HastNode,
   HastRoot,
