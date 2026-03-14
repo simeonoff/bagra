@@ -1,7 +1,7 @@
 {
-  "name": "@bagra/wasm",
+  "name": "@bagrajs/wasm",
   "version": "0.1.0",
-  "description": "Inlined web-tree-sitter WASM binary for @bagra",
+  "description": "Inlined web-tree-sitter WASM binary for @bagrajs",
   "keywords": [
     "tree-sitter",
     "wasm",

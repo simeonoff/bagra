@@ -8,7 +8,7 @@
  * @example
  * ```ts
  * // Browser — optimal, uses streaming WASM compilation
- * import { createHighlighter } from '@bagra/core';
+ * import { createHighlighter } from '@bagrajs/core';
  *
  * const hl = await createHighlighter({
  *   wasmBinary: await fetch('/wasm/web-tree-sitter.wasm').then(r => r.arrayBuffer()),
@@ -16,7 +16,7 @@
  * });
  *
  * // Node.js — load from disk
- * import { createHighlighter } from '@bagra/core';
+ * import { createHighlighter } from '@bagrajs/core';
  * import { readFile } from 'node:fs/promises';
  *
  * const hl = await createHighlighter({

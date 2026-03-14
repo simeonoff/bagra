@@ -9,7 +9,7 @@
  *   Layer 3 (Override): --bagra-keyword: hotpink;  — optional per-capture fine-tuning
  *
  * Usage:
- *   1. Import this file: import '@bagra/core/theme.css';
+ *   1. Import this file: import '@bagrajs/core/theme.css';
  *   2. Define a scheme on .bagra[data-theme="..."] or :root
  *   3. Set data-theme on <pre> via codeToHtml('lang', code, { theme: 'name' })
  *

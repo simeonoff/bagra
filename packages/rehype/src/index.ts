@@ -11,6 +11,6 @@
  */
 export function rehypeBagra(): never {
   throw new Error(
-    'rehypeBagra is not yet implemented. It will be available in @bagra/rehype v0.2.',
+    'rehypeBagra is not yet implemented. It will be available in @bagrajs/rehype v0.2.',
   );
 }

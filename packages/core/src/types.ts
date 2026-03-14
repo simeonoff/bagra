@@ -30,11 +30,11 @@ export interface HighlighterOptions {
   /**
    * Pre-loaded `web-tree-sitter` WASM binary.
    *
-   * - Required when using `@bagra/core`
-   * - Automatically provided when using `@bagra/web` (full bundle)
+   * - Required when using `@bagrajs/core`
+   * - Automatically provided when using `@bagrajs/web` (full bundle)
    *
    * Can be an `ArrayBuffer` or `Uint8Array` obtained from `fetch()`, `fs.readFile()`,
-   * or the inlined binary from `@bagra/wasm`.
+   * or the inlined binary from `@bagrajs/wasm`.
    */
   wasmBinary?: ArrayBuffer | Uint8Array;
 
@@ -140,7 +140,7 @@ export interface Highlighter {
    * Import the mapping CSS to apply theme colors:
    *
    * ```ts
-   * import '@bagra/core/theme.css';
+   * import '@bagrajs/core/theme.css';
    * ```
    */
   codeToHtml(lang: string, code: string, options?: CodeOptions): string;

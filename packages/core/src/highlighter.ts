@@ -126,7 +126,7 @@ async function loadLanguage(
  *
  * @example
  * ```ts
- * import { createHighlighter } from '@bagra/web';
+ * import { createHighlighter } from '@bagrajs/web';
  *
  * const hl = await createHighlighter({
  *   languages: {
