@@ -9,7 +9,7 @@ export default defineConfig({
       fileName: 'index',
     },
     rollupOptions: {
-      external: ['@bagra/core', '@bagra/wasm'],
+      external: ['@bagrajs/core', '@bagrajs/wasm'],
     },
   },
   plugins: [dts({ rollupTypes: false })],

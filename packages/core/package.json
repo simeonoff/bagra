@@ -1,5 +1,5 @@
 {
-  "name": "@bagra/core",
+  "name": "@bagrajs/core",
   "version": "0.1.0",
   "description": "Parser-accurate syntax highlighting using tree-sitter — core library",
   "keywords": [

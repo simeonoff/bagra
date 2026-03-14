@@ -7,7 +7,7 @@
  *
  * @example
  * ```ts
- * import { generateScheme, parseBase16Yaml } from '@bagra/core/theme';
+ * import { generateScheme, parseBase16Yaml } from '@bagrajs/core/theme';
  *
  * // From a JS object
  * const css = generateScheme({

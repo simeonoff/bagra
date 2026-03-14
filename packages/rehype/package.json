@@ -1,5 +1,5 @@
 {
-  "name": "@bagra/rehype",
+  "name": "@bagrajs/rehype",
   "version": "0.1.0",
   "description": "rehype plugin for tree-sitter syntax highlighting",
   "keywords": [
@@ -36,6 +36,6 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@bagra/core": "^0.1.0"
+    "@bagrajs/core": "^0.1.0"
   }
 }

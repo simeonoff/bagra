@@ -11,6 +11,6 @@
  */
 export function markdownItBagra(): never {
   throw new Error(
-    'markdownItBagra is not yet implemented. It will be available in @bagra/markdown-it v0.2.',
+    'markdownItBagra is not yet implemented. It will be available in @bagrajs/markdown-it v0.2.',
   );
 }

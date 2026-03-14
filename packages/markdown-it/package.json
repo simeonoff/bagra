@@ -1,5 +1,5 @@
 {
-  "name": "@bagra/markdown-it",
+  "name": "@bagrajs/markdown-it",
   "version": "0.1.0",
   "description": "markdown-it plugin for tree-sitter syntax highlighting",
   "keywords": [
@@ -35,6 +35,6 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@bagra/core": "^0.1.0"
+    "@bagrajs/core": "^0.1.0"
   }
 }

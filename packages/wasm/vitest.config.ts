@@ -1,4 +1,4 @@
-import wasmInlinePlugin from '@bagra/build-plugins/wasm-inline';
+import wasmInlinePlugin from '@bagrajs/build-plugins/wasm-inline';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({

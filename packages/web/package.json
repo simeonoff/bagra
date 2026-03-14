@@ -1,5 +1,5 @@
 {
-  "name": "@bagra/web",
+  "name": "@bagrajs/web",
   "version": "0.1.0",
   "description": "Parser-accurate syntax highlighting for the web, powered by tree-sitter WASM grammars",
   "keywords": [
@@ -42,7 +42,7 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@bagra/core": "^0.1.0",
-    "@bagra/wasm": "^0.1.0"
+    "@bagrajs/core": "^0.1.0",
+    "@bagrajs/wasm": "^0.1.0"
   }
 }
