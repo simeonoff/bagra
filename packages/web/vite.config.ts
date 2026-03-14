@@ -9,7 +9,7 @@ export default defineConfig({
       fileName: 'index',
     },
     rollupOptions: {
-      external: ['@tree-sitter-highlight/core', '@tree-sitter-highlight/wasm'],
+      external: ['@bagra/core', '@bagra/wasm'],
     },
   },
   plugins: [dts({ rollupTypes: false })],

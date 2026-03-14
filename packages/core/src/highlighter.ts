@@ -90,7 +90,7 @@ function warnUnsupportedPredicates(query: Query, languageName: string): void {
       .join(', ');
 
     console.warn(
-      `[tree-sitter-highlight] Language "${languageName}": highlights query ` +
+      `[bagra] Language "${languageName}": highlights query ` +
         `contains unsupported predicates: ${details}. ` +
         'These predicates are silently ignored by web-tree-sitter and treated ' +
         'as always matching, which may cause incorrect highlighting. ' +
@@ -126,7 +126,7 @@ async function loadLanguage(
  *
  * @example
  * ```ts
- * import { createHighlighter } from '@tree-sitter-highlight/web';
+ * import { createHighlighter } from '@bagra/web';
  *
  * const hl = await createHighlighter({
  *   languages: {

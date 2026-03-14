@@ -1,5 +1,5 @@
 {
-  "name": "@tree-sitter-highlight/test-utils",
+  "name": "@bagra/test-utils",
   "version": "0.0.0",
   "private": true,
   "type": "module",

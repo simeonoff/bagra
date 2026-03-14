@@ -3,13 +3,13 @@ import type { HighlightEvent } from '../types';
 /**
  * Convert a capture name to a CSS class name.
  *
- * The convention follows the `tsh-` prefix with dots replaced by dashes:
- * - `keyword` -> `tsh-keyword`
- * - `keyword.function` -> `tsh-keyword-function`
- * - `variable.builtin` -> `tsh-variable-builtin`
+ * The convention follows the `bagra-` prefix with dots replaced by dashes:
+ * - `keyword` -> `bagra-keyword`
+ * - `keyword.function` -> `bagra-keyword-function`
+ * - `variable.builtin` -> `bagra-variable-builtin`
  */
 export function captureNameToClass(captureName: string): string {
-  return `tsh-${captureName.replace(/\./g, '-')}`;
+  return `bagra-${captureName.replace(/\./g, '-')}`;
 }
 
 /**
@@ -26,7 +26,7 @@ function escapeHtml(text: string): string {
 /**
  * Render a highlight event stream into an HTML string.
  *
- * The output is a `<pre class="tsh"><code>...</code></pre>` block where each
+ * The output is a `<pre class="bagra"><code>...</code></pre>` block where each
  * line is wrapped in a `<span class="line">` element and each highlighted
  * region is a `<span>` with the appropriate CSS class.
  *
@@ -43,8 +43,8 @@ export function renderHtml(
   theme?: string,
 ): string {
   const preAttrs = theme
-    ? `class="tsh" data-theme="${escapeHtml(theme)}"`
-    : 'class="tsh"';
+    ? `class="bagra" data-theme="${escapeHtml(theme)}"`
+    : 'class="bagra"';
   const parts: string[] = [`<pre ${preAttrs}><code>`];
   let isFirstLine = true;
 

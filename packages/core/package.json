@@ -1,5 +1,5 @@
 {
-  "name": "@tree-sitter-highlight/core",
+  "name": "@bagra/core",
   "version": "0.1.0",
   "description": "Parser-accurate syntax highlighting using tree-sitter — core library",
   "keywords": [
@@ -8,13 +8,13 @@
     "syntax",
     "wasm"
   ],
-  "homepage": "https://github.com/simeonoff/tree-sitter-highlight-web#readme",
+  "homepage": "https://github.com/simeonoff/bagra#readme",
   "bugs": {
-    "url": "https://github.com/simeonoff/tree-sitter-highlight-web/issues"
+    "url": "https://github.com/simeonoff/bagra/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/simeonoff/tree-sitter-highlight-web.git",
+    "url": "git+https://github.com/simeonoff/bagra.git",
     "directory": "packages/core"
   },
   "license": "MIT",

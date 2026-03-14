@@ -1,4 +1,4 @@
-import wasmInlinePlugin from '@tree-sitter-highlight/build-plugins/wasm-inline';
+import wasmInlinePlugin from '@bagra/build-plugins/wasm-inline';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({

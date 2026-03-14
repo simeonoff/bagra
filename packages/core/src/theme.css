@@ -1,16 +1,16 @@
 /**
- * tree-sitter-highlight-web — Capture-to-Base16 Mapping CSS
+ * bagra — Capture-to-Base16 Mapping CSS
  *
  * This file maps all tree-sitter capture classes to Base16 color variables.
  * It uses a three-layer system:
  *
  *   Layer 1 (Scheme):  --base00 through --base0F — 16 colors, user-provided
- *   Layer 2 (Mapping): .tsh-keyword { color: var(--tsh-keyword, var(--base0E)); }
- *   Layer 3 (Override): --tsh-keyword: hotpink;  — optional per-capture fine-tuning
+ *   Layer 2 (Mapping): .bagra-keyword { color: var(--bagra-keyword, var(--base0E)); }
+ *   Layer 3 (Override): --bagra-keyword: hotpink;  — optional per-capture fine-tuning
  *
  * Usage:
- *   1. Import this file: import '@tree-sitter-highlight/core/theme.css';
- *   2. Define a scheme on .tsh[data-theme="..."] or :root
+ *   1. Import this file: import '@bagra/core/theme.css';
+ *   2. Define a scheme on .bagra[data-theme="..."] or :root
  *   3. Set data-theme on <pre> via codeToHtml('lang', code, { theme: 'name' })
  *
  * @see https://github.com/tinted-theming/schemes — 250+ Base16 color schemes
@@ -20,236 +20,236 @@
  * Base element
  * ------------------------------------------------------------------------- */
 
-.tsh {
-  background: var(--tsh-bg, var(--base00));
-  color: var(--tsh-fg, var(--base05));
+.bagra {
+  background: var(--bagra-bg, var(--base00));
+  color: var(--bagra-fg, var(--base05));
 }
 
 /* ---------------------------------------------------------------------------
  * Identifiers
  * ------------------------------------------------------------------------- */
 
-.tsh-variable {
-  color: var(--tsh-variable, var(--base05));
+.bagra-variable {
+  color: var(--bagra-variable, var(--base05));
 }
 
-.tsh-variable-builtin {
-  color: var(--tsh-variable-builtin, var(--base05));
+.bagra-variable-builtin {
+  color: var(--bagra-variable-builtin, var(--base05));
   font-style: italic;
 }
 
-.tsh-variable-parameter {
-  color: var(--tsh-variable-parameter, var(--base05));
+.bagra-variable-parameter {
+  color: var(--bagra-variable-parameter, var(--base05));
 }
 
-.tsh-variable-member {
-  color: var(--tsh-variable-member, var(--base05));
+.bagra-variable-member {
+  color: var(--bagra-variable-member, var(--base05));
 }
 
-.tsh-constant {
-  color: var(--tsh-constant, var(--base09));
+.bagra-constant {
+  color: var(--bagra-constant, var(--base09));
 }
 
-.tsh-constant-builtin {
-  color: var(--tsh-constant-builtin, var(--base09));
+.bagra-constant-builtin {
+  color: var(--bagra-constant-builtin, var(--base09));
 }
 
-.tsh-module {
-  color: var(--tsh-module, var(--base08));
+.bagra-module {
+  color: var(--bagra-module, var(--base08));
 }
 
-.tsh-label {
-  color: var(--tsh-label, var(--base0A));
+.bagra-label {
+  color: var(--bagra-label, var(--base0A));
 }
 
 /* ---------------------------------------------------------------------------
  * Literals
  * ------------------------------------------------------------------------- */
 
-.tsh-string {
-  color: var(--tsh-string, var(--base0B));
+.bagra-string {
+  color: var(--bagra-string, var(--base0B));
 }
 
-.tsh-string-documentation {
-  color: var(--tsh-string-documentation, var(--base0B));
+.bagra-string-documentation {
+  color: var(--bagra-string-documentation, var(--base0B));
 }
 
-.tsh-string-regexp {
-  color: var(--tsh-string-regexp, var(--base0B));
+.bagra-string-regexp {
+  color: var(--bagra-string-regexp, var(--base0B));
 }
 
-.tsh-string-escape {
-  color: var(--tsh-string-escape, var(--base0C));
+.bagra-string-escape {
+  color: var(--bagra-string-escape, var(--base0C));
 }
 
-.tsh-string-special {
-  color: var(--tsh-string-special, var(--base0B));
+.bagra-string-special {
+  color: var(--bagra-string-special, var(--base0B));
 }
 
-.tsh-string-special-symbol {
-  color: var(--tsh-string-special-symbol, var(--base0B));
+.bagra-string-special-symbol {
+  color: var(--bagra-string-special-symbol, var(--base0B));
 }
 
-.tsh-string-special-url {
-  color: var(--tsh-string-special-url, var(--base09));
+.bagra-string-special-url {
+  color: var(--bagra-string-special-url, var(--base09));
   text-decoration: underline;
 }
 
-.tsh-character {
-  color: var(--tsh-character, var(--base08));
+.bagra-character {
+  color: var(--bagra-character, var(--base08));
 }
 
-.tsh-character-special {
-  color: var(--tsh-character-special, var(--base0F));
+.bagra-character-special {
+  color: var(--bagra-character-special, var(--base0F));
 }
 
-.tsh-boolean {
-  color: var(--tsh-boolean, var(--base09));
+.bagra-boolean {
+  color: var(--bagra-boolean, var(--base09));
 }
 
-.tsh-number {
-  color: var(--tsh-number, var(--base09));
+.bagra-number {
+  color: var(--bagra-number, var(--base09));
 }
 
-.tsh-number-float {
-  color: var(--tsh-number-float, var(--base09));
+.bagra-number-float {
+  color: var(--bagra-number-float, var(--base09));
 }
 
 /* ---------------------------------------------------------------------------
  * Types
  * ------------------------------------------------------------------------- */
 
-.tsh-type {
-  color: var(--tsh-type, var(--base0A));
+.bagra-type {
+  color: var(--bagra-type, var(--base0A));
 }
 
-.tsh-type-builtin {
-  color: var(--tsh-type-builtin, var(--base0A));
+.bagra-type-builtin {
+  color: var(--bagra-type-builtin, var(--base0A));
 }
 
-.tsh-type-definition {
-  color: var(--tsh-type-definition, var(--base0A));
+.bagra-type-definition {
+  color: var(--bagra-type-definition, var(--base0A));
 }
 
-.tsh-constructor {
-  color: var(--tsh-constructor, var(--base0D));
+.bagra-constructor {
+  color: var(--bagra-constructor, var(--base0D));
 }
 
-.tsh-attribute {
-  color: var(--tsh-attribute, var(--base0A));
+.bagra-attribute {
+  color: var(--bagra-attribute, var(--base0A));
 }
 
-.tsh-property {
-  color: var(--tsh-property, var(--base05));
+.bagra-property {
+  color: var(--bagra-property, var(--base05));
 }
 
 /* ---------------------------------------------------------------------------
  * Functions
  * ------------------------------------------------------------------------- */
 
-.tsh-function {
-  color: var(--tsh-function, var(--base0D));
+.bagra-function {
+  color: var(--bagra-function, var(--base0D));
 }
 
-.tsh-function-builtin {
-  color: var(--tsh-function-builtin, var(--base0D));
+.bagra-function-builtin {
+  color: var(--bagra-function-builtin, var(--base0D));
 }
 
-.tsh-function-call {
-  color: var(--tsh-function-call, var(--base0D));
+.bagra-function-call {
+  color: var(--bagra-function-call, var(--base0D));
 }
 
-.tsh-function-macro {
-  color: var(--tsh-function-macro, var(--base08));
+.bagra-function-macro {
+  color: var(--bagra-function-macro, var(--base08));
 }
 
-.tsh-function-method {
-  color: var(--tsh-function-method, var(--base0D));
+.bagra-function-method {
+  color: var(--bagra-function-method, var(--base0D));
 }
 
-.tsh-function-method-call {
-  color: var(--tsh-function-method-call, var(--base0D));
+.bagra-function-method-call {
+  color: var(--bagra-function-method-call, var(--base0D));
 }
 
 /* ---------------------------------------------------------------------------
  * Keywords
  * ------------------------------------------------------------------------- */
 
-.tsh-keyword {
-  color: var(--tsh-keyword, var(--base0E));
+.bagra-keyword {
+  color: var(--bagra-keyword, var(--base0E));
 }
 
-.tsh-keyword-coroutine {
-  color: var(--tsh-keyword-coroutine, var(--base0E));
+.bagra-keyword-coroutine {
+  color: var(--bagra-keyword-coroutine, var(--base0E));
 }
 
-.tsh-keyword-function {
-  color: var(--tsh-keyword-function, var(--base0E));
+.bagra-keyword-function {
+  color: var(--bagra-keyword-function, var(--base0E));
 }
 
-.tsh-keyword-operator {
-  color: var(--tsh-keyword-operator, var(--base0E));
+.bagra-keyword-operator {
+  color: var(--bagra-keyword-operator, var(--base0E));
 }
 
-.tsh-keyword-import {
-  color: var(--tsh-keyword-import, var(--base0D));
+.bagra-keyword-import {
+  color: var(--bagra-keyword-import, var(--base0D));
 }
 
-.tsh-keyword-type {
-  color: var(--tsh-keyword-type, var(--base0E));
+.bagra-keyword-type {
+  color: var(--bagra-keyword-type, var(--base0E));
 }
 
-.tsh-keyword-modifier {
-  color: var(--tsh-keyword-modifier, var(--base0E));
+.bagra-keyword-modifier {
+  color: var(--bagra-keyword-modifier, var(--base0E));
 }
 
-.tsh-keyword-repeat {
-  color: var(--tsh-keyword-repeat, var(--base0E));
+.bagra-keyword-repeat {
+  color: var(--bagra-keyword-repeat, var(--base0E));
 }
 
-.tsh-keyword-return {
-  color: var(--tsh-keyword-return, var(--base0E));
+.bagra-keyword-return {
+  color: var(--bagra-keyword-return, var(--base0E));
 }
 
-.tsh-keyword-exception {
-  color: var(--tsh-keyword-exception, var(--base0E));
+.bagra-keyword-exception {
+  color: var(--bagra-keyword-exception, var(--base0E));
 }
 
-.tsh-keyword-conditional {
-  color: var(--tsh-keyword-conditional, var(--base0E));
+.bagra-keyword-conditional {
+  color: var(--bagra-keyword-conditional, var(--base0E));
 }
 
-.tsh-keyword-directive {
-  color: var(--tsh-keyword-directive, var(--base0E));
+.bagra-keyword-directive {
+  color: var(--bagra-keyword-directive, var(--base0E));
 }
 
 /* ---------------------------------------------------------------------------
  * Punctuation
  * ------------------------------------------------------------------------- */
 
-.tsh-punctuation-delimiter {
-  color: var(--tsh-punctuation-delimiter, var(--base0F));
+.bagra-punctuation-delimiter {
+  color: var(--bagra-punctuation-delimiter, var(--base0F));
 }
 
-.tsh-punctuation-bracket {
-  color: var(--tsh-punctuation-bracket, var(--base05));
+.bagra-punctuation-bracket {
+  color: var(--bagra-punctuation-bracket, var(--base05));
 }
 
-.tsh-punctuation-special {
-  color: var(--tsh-punctuation-special, var(--base03));
+.bagra-punctuation-special {
+  color: var(--bagra-punctuation-special, var(--base03));
 }
 
 /* ---------------------------------------------------------------------------
  * Comments
  * ------------------------------------------------------------------------- */
 
-.tsh-comment {
-  color: var(--tsh-comment, var(--base03));
+.bagra-comment {
+  color: var(--bagra-comment, var(--base03));
   font-style: italic;
 }
 
-.tsh-comment-documentation {
-  color: var(--tsh-comment-documentation, var(--base03));
+.bagra-comment-documentation {
+  color: var(--bagra-comment-documentation, var(--base03));
   font-style: italic;
 }
 
@@ -257,90 +257,90 @@
  * Tags (HTML/XML)
  * ------------------------------------------------------------------------- */
 
-.tsh-tag {
-  color: var(--tsh-tag, var(--base08));
+.bagra-tag {
+  color: var(--bagra-tag, var(--base08));
 }
 
-.tsh-tag-builtin {
-  color: var(--tsh-tag-builtin, var(--base08));
+.bagra-tag-builtin {
+  color: var(--bagra-tag-builtin, var(--base08));
 }
 
-.tsh-tag-attribute {
-  color: var(--tsh-tag-attribute, var(--base0A));
+.bagra-tag-attribute {
+  color: var(--bagra-tag-attribute, var(--base0A));
 }
 
-.tsh-tag-delimiter {
-  color: var(--tsh-tag-delimiter, var(--base0F));
+.bagra-tag-delimiter {
+  color: var(--bagra-tag-delimiter, var(--base0F));
 }
 
 /* ---------------------------------------------------------------------------
  * Operators
  * ------------------------------------------------------------------------- */
 
-.tsh-operator {
-  color: var(--tsh-operator, var(--base05));
+.bagra-operator {
+  color: var(--bagra-operator, var(--base05));
 }
 
 /* ---------------------------------------------------------------------------
  * Diff
  * ------------------------------------------------------------------------- */
 
-.tsh-diff-plus {
-  color: var(--tsh-diff-plus, var(--base0B));
+.bagra-diff-plus {
+  color: var(--bagra-diff-plus, var(--base0B));
 }
 
-.tsh-diff-minus {
-  color: var(--tsh-diff-minus, var(--base08));
+.bagra-diff-minus {
+  color: var(--bagra-diff-minus, var(--base08));
 }
 
-.tsh-diff-delta {
-  color: var(--tsh-diff-delta, var(--base09));
+.bagra-diff-delta {
+  color: var(--bagra-diff-delta, var(--base09));
 }
 
 /* ---------------------------------------------------------------------------
  * Markup
  * ------------------------------------------------------------------------- */
 
-.tsh-markup-heading {
-  color: var(--tsh-markup-heading, var(--base0D));
+.bagra-markup-heading {
+  color: var(--bagra-markup-heading, var(--base0D));
   font-weight: bold;
 }
 
-.tsh-markup-bold {
+.bagra-markup-bold {
   font-weight: bold;
 }
 
-.tsh-markup-italic {
+.bagra-markup-italic {
   font-style: italic;
 }
 
-.tsh-markup-link {
-  color: var(--tsh-markup-link, var(--base09));
+.bagra-markup-link {
+  color: var(--bagra-markup-link, var(--base09));
   text-decoration: underline;
 }
 
-.tsh-markup-link-url {
-  color: var(--tsh-markup-link-url, var(--base09));
+.bagra-markup-link-url {
+  color: var(--bagra-markup-link-url, var(--base09));
   text-decoration: underline;
 }
 
-.tsh-markup-raw {
-  color: var(--tsh-markup-raw, var(--base09));
+.bagra-markup-raw {
+  color: var(--bagra-markup-raw, var(--base09));
 }
 
-.tsh-markup-raw-block {
-  color: var(--tsh-markup-raw-block, var(--base09));
+.bagra-markup-raw-block {
+  color: var(--bagra-markup-raw-block, var(--base09));
 }
 
-.tsh-markup-quote {
-  color: var(--tsh-markup-quote, var(--base03));
+.bagra-markup-quote {
+  color: var(--bagra-markup-quote, var(--base03));
   font-style: italic;
 }
 
-.tsh-markup-list {
-  color: var(--tsh-markup-list, var(--base0A));
+.bagra-markup-list {
+  color: var(--bagra-markup-list, var(--base0A));
 }
 
-.tsh-markup-strikethrough {
+.bagra-markup-strikethrough {
   text-decoration: line-through;
 }

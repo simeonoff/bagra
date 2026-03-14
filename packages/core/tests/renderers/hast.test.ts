@@ -17,7 +17,7 @@ function getFirstLineChildren(root: ReturnType<typeof renderHast>) {
 }
 
 describe('renderHast', () => {
-  it('produces a root > pre.tsh > code > span.line structure', () => {
+  it('produces a root > pre.bagra > code > span.line structure', () => {
     const events: HighlightEvent[] = [
       { type: 'line-start' },
       { type: 'line-end' },
@@ -30,7 +30,7 @@ describe('renderHast', () => {
     const pre = root.children[0] as HastElement;
     expect(pre.type).toBe('element');
     expect(pre.tagName).toBe('pre');
-    expect(pre.properties.className).toEqual(['tsh']);
+    expect(pre.properties.className).toEqual(['bagra']);
 
     const code = pre.children[0] as HastElement;
     expect(code.type).toBe('element');
@@ -74,7 +74,7 @@ describe('renderHast', () => {
     const span = lineChildren[0] as HastElement;
     expect(span.type).toBe('element');
     expect(span.tagName).toBe('span');
-    expect(span.properties.className).toEqual(['tsh-keyword']);
+    expect(span.properties.className).toEqual(['bagra-keyword']);
     expect(span.children).toHaveLength(1);
     expect((span.children[0] as HastText).value).toBe('let');
   });
@@ -96,7 +96,7 @@ describe('renderHast', () => {
     expect(lineChildren).toHaveLength(1);
 
     const numberSpan = lineChildren[0] as HastElement;
-    expect(numberSpan.properties.className).toEqual(['tsh-number']);
+    expect(numberSpan.properties.className).toEqual(['bagra-number']);
     expect(numberSpan.children).toHaveLength(2);
 
     // "16" text
@@ -105,7 +105,7 @@ describe('renderHast', () => {
     // nested "px" span
     const typeSpan = numberSpan.children[1] as HastElement;
     expect(typeSpan.tagName).toBe('span');
-    expect(typeSpan.properties.className).toEqual(['tsh-type']);
+    expect(typeSpan.properties.className).toEqual(['bagra-type']);
     expect((typeSpan.children[0] as HastText).value).toBe('px');
   });
 
@@ -186,7 +186,7 @@ describe('renderHast', () => {
     const root = renderHast(events, 'hello', 'nord');
     const pre = root.children[0] as HastElement;
 
-    expect(pre.properties.className).toEqual(['tsh']);
+    expect(pre.properties.className).toEqual(['bagra']);
     expect(pre.properties.dataTheme).toBe('nord');
   });
 
@@ -199,7 +199,7 @@ describe('renderHast', () => {
     const root = renderHast(events, 'hello');
     const pre = root.children[0] as HastElement;
 
-    expect(pre.properties.className).toEqual(['tsh']);
+    expect(pre.properties.className).toEqual(['bagra']);
     expect(pre.properties).not.toHaveProperty('dataTheme');
   });
 

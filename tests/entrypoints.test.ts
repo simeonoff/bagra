@@ -1,15 +1,15 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { createHighlighter as createFromCore } from '@tree-sitter-highlight/core';
-import { wasmBinary } from '@tree-sitter-highlight/wasm';
-import { createHighlighter as createFromWeb } from '@tree-sitter-highlight/web';
+import { createHighlighter as createFromCore } from '@bagra/core';
+import { wasmBinary } from '@bagra/wasm';
+import { createHighlighter as createFromWeb } from '@bagra/web';
 import { describe, expect, it } from 'vitest';
 
 const FIXTURES = resolve(__dirname, '../internal/test-utils/fixtures');
 const GRAMMAR_PATH = resolve(FIXTURES, 'tree-sitter-scss.wasm');
 const HIGHLIGHTS_PATH = resolve(FIXTURES, 'scss-highlights.scm');
 
-describe('web entry point (@tree-sitter-highlight/web)', () => {
+describe('web entry point (@bagra/web)', () => {
   it('exports createHighlighter that works with highlights as a path', async () => {
     const hl = await createFromWeb({
       languages: {
@@ -18,7 +18,7 @@ describe('web entry point (@tree-sitter-highlight/web)', () => {
     });
 
     const html = hl.codeToHtml('scss', '$x: 1;');
-    expect(html).toContain('tsh-variable');
+    expect(html).toContain('bagra-variable');
     expect(html).toContain('$x');
 
     hl.dispose();
@@ -33,7 +33,7 @@ describe('web entry point (@tree-sitter-highlight/web)', () => {
   });
 });
 
-describe('core entry point (@tree-sitter-highlight/core)', () => {
+describe('core entry point (@bagra/core)', () => {
   it('works when wasmBinary is provided as a Buffer (Node.js)', async () => {
     const wasmBuffer = await readFile(
       resolve('node_modules/web-tree-sitter/web-tree-sitter.wasm'),
@@ -47,7 +47,7 @@ describe('core entry point (@tree-sitter-highlight/core)', () => {
     });
 
     const html = hl.codeToHtml('scss', '$x: 1;');
-    expect(html).toContain('tsh-variable');
+    expect(html).toContain('bagra-variable');
 
     hl.dispose();
   });
@@ -68,13 +68,13 @@ describe('core entry point (@tree-sitter-highlight/core)', () => {
     });
 
     const html = hl.codeToHtml('scss', '$x: 1;');
-    expect(html).toContain('tsh-variable');
+    expect(html).toContain('bagra-variable');
 
     hl.dispose();
   });
 });
 
-describe('wasm entry point (@tree-sitter-highlight/wasm)', () => {
+describe('wasm entry point (@bagra/wasm)', () => {
   it('exports wasmBinary as a Uint8Array', () => {
     expect(wasmBinary).toBeInstanceOf(Uint8Array);
     // The WASM binary should be non-trivially sized (~192KB)
@@ -98,7 +98,7 @@ describe('wasm entry point (@tree-sitter-highlight/wasm)', () => {
     });
 
     const html = hl.codeToHtml('scss', '$x: 1;');
-    expect(html).toContain('tsh-variable');
+    expect(html).toContain('bagra-variable');
 
     hl.dispose();
   });

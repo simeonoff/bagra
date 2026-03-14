@@ -1,13 +1,13 @@
 /**
- * Theme utilities for tree-sitter-highlight-web.
+ * Theme utilities for bagra.
  *
  * Provides functions to generate CSS custom property declarations from
  * Base16 color schemes. The output is bare CSS declarations — the consumer
- * decides where to place them (`:root`, `.tsh[data-theme="..."]`, etc.).
+ * decides where to place them (`:root`, `.bagra[data-theme="..."]`, etc.).
  *
  * @example
  * ```ts
- * import { generateScheme, parseBase16Yaml } from '@tree-sitter-highlight/core/theme';
+ * import { generateScheme, parseBase16Yaml } from '@bagra/core/theme';
  *
  * // From a JS object
  * const css = generateScheme({
@@ -117,7 +117,7 @@ function normalizeColor(value: string): string {
  * const css = `:root {\n${declarations}\n}`;
  *
  * // Wrap for per-block theming
- * const css = `.tsh[data-theme="nord"] {\n${declarations}\n}`;
+ * const css = `.bagra[data-theme="nord"] {\n${declarations}\n}`;
  * ```
  *
  * @param scheme - A Base16 color scheme object with all 16 colors.

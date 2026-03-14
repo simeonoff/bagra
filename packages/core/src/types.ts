@@ -30,11 +30,11 @@ export interface HighlighterOptions {
   /**
    * Pre-loaded `web-tree-sitter` WASM binary.
    *
-   * - Required when using `tree-sitter-highlight-web/core`
-   * - Automatically provided when using `tree-sitter-highlight-web` (full bundle)
+   * - Required when using `@bagra/core`
+   * - Automatically provided when using `@bagra/web` (full bundle)
    *
    * Can be an `ArrayBuffer` or `Uint8Array` obtained from `fetch()`, `fs.readFile()`,
-   * or the inlined binary from `tree-sitter-highlight-web/wasm`.
+   * or the inlined binary from `@bagra/wasm`.
    */
   wasmBinary?: ArrayBuffer | Uint8Array;
 
@@ -110,7 +110,7 @@ export interface CodeOptions {
    * to scope Base16 scheme variables via CSS:
    *
    * ```css
-   * .tsh[data-theme="nord"] {
+   * .bagra[data-theme="nord"] {
    *   --base00: #2e3440;
    *   --base05: #d8dee9;
    *   ...
@@ -120,7 +120,7 @@ export interface CodeOptions {
    * @example
    * ```ts
    * highlighter.codeToHtml('scss', code, { theme: 'nord' });
-   * // => <pre class="tsh" data-theme="nord"><code>...</code></pre>
+   * // => <pre class="bagra" data-theme="nord"><code>...</code></pre>
    * ```
    */
   theme?: string;
@@ -133,14 +133,14 @@ export interface Highlighter {
   /**
    * Highlight source code and return an HTML string.
    *
-   * The output is a `<pre class="tsh"><code>...</code></pre>` block with
+   * The output is a `<pre class="bagra"><code>...</code></pre>` block with
    * `<span>` elements for each highlighted region. Capture names are converted
-   * to CSS classes: `@keyword.function` becomes `class="tsh-keyword-function"`.
+   * to CSS classes: `@keyword.function` becomes `class="bagra-keyword-function"`.
    *
    * Import the mapping CSS to apply theme colors:
    *
    * ```ts
-   * import '@tree-sitter-highlight/core/theme.css';
+   * import '@bagra/core/theme.css';
    * ```
    */
   codeToHtml(lang: string, code: string, options?: CodeOptions): string;

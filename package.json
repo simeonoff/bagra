@@ -1,14 +1,14 @@
 {
-  "name": "tree-sitter-highlight-web",
+  "name": "bagra",
   "private": true,
   "description": "Parser-accurate syntax highlighting for the web, powered by tree-sitter WASM grammars",
-  "homepage": "https://github.com/simeonoff/tree-sitter-highlight-web#readme",
+  "homepage": "https://github.com/simeonoff/bagra#readme",
   "bugs": {
-    "url": "https://github.com/simeonoff/tree-sitter-highlight-web/issues"
+    "url": "https://github.com/simeonoff/bagra/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/simeonoff/tree-sitter-highlight-web.git"
+    "url": "git+https://github.com/simeonoff/bagra.git"
   },
   "license": "MIT",
   "author": "Simeon Simeonoff",

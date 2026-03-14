@@ -3,34 +3,36 @@ import { captureNameToClass, renderHtml } from '../../src/renderers/html';
 import type { HighlightEvent } from '../../src/types';
 
 describe('captureNameToClass', () => {
-  it('prefixes a simple name with tsh-', () => {
-    expect(captureNameToClass('keyword')).toBe('tsh-keyword');
+  it('prefixes a simple name with bagra-', () => {
+    expect(captureNameToClass('keyword')).toBe('bagra-keyword');
   });
 
   it('replaces dots with dashes', () => {
-    expect(captureNameToClass('keyword.function')).toBe('tsh-keyword-function');
+    expect(captureNameToClass('keyword.function')).toBe(
+      'bagra-keyword-function',
+    );
   });
 
   it('handles deeply nested names', () => {
     expect(captureNameToClass('string.special.url')).toBe(
-      'tsh-string-special-url',
+      'bagra-string-special-url',
     );
   });
 
   it('handles single-character names', () => {
-    expect(captureNameToClass('x')).toBe('tsh-x');
+    expect(captureNameToClass('x')).toBe('bagra-x');
   });
 });
 
 describe('renderHtml', () => {
-  it('wraps output in pre.tsh > code with a single empty line', () => {
+  it('wraps output in pre.bagra > code with a single empty line', () => {
     const events: HighlightEvent[] = [
       { type: 'line-start' },
       { type: 'line-end' },
     ];
     const html = renderHtml(events, '');
     expect(html).toBe(
-      '<pre class="tsh"><code><span class="line"></span></code></pre>',
+      '<pre class="bagra"><code><span class="line"></span></code></pre>',
     );
   });
 
@@ -42,7 +44,7 @@ describe('renderHtml', () => {
     ];
     const html = renderHtml(events, 'hello');
     expect(html).toBe(
-      '<pre class="tsh"><code><span class="line">hello</span></code></pre>',
+      '<pre class="bagra"><code><span class="line">hello</span></code></pre>',
     );
   });
 
@@ -56,8 +58,8 @@ describe('renderHtml', () => {
     ];
     const html = renderHtml(events, 'let');
     expect(html).toBe(
-      '<pre class="tsh"><code>' +
-        '<span class="line"><span class="tsh-keyword">let</span></span>' +
+      '<pre class="bagra"><code>' +
+        '<span class="line"><span class="bagra-keyword">let</span></span>' +
         '</code></pre>',
     );
   });
@@ -82,13 +84,13 @@ describe('renderHtml', () => {
 
     const html = renderHtml(events, source);
     expect(html).toBe(
-      '<pre class="tsh"><code>' +
+      '<pre class="bagra"><code>' +
         '<span class="line">' +
-        '<span class="tsh-keyword">let</span>' +
+        '<span class="bagra-keyword">let</span>' +
         ' ' +
-        '<span class="tsh-variable">x</span>' +
+        '<span class="bagra-variable">x</span>' +
         ' = ' +
-        '<span class="tsh-number">1</span>' +
+        '<span class="bagra-number">1</span>' +
         '</span>' +
         '</code></pre>',
     );
@@ -109,10 +111,10 @@ describe('renderHtml', () => {
 
     const html = renderHtml(events, source);
     expect(html).toBe(
-      '<pre class="tsh"><code>' +
+      '<pre class="bagra"><code>' +
         '<span class="line">' +
-        '<span class="tsh-number">16' +
-        '<span class="tsh-type">px</span>' +
+        '<span class="bagra-number">16' +
+        '<span class="bagra-type">px</span>' +
         '</span>' +
         '</span>' +
         '</code></pre>',
@@ -143,8 +145,8 @@ describe('renderHtml', () => {
 
     const html = renderHtml(events, source);
     expect(html).toBe(
-      '<pre class="tsh"><code>' +
-        '<span class="line"><span class="tsh-tag">&lt;b&gt;</span></span>' +
+      '<pre class="bagra"><code>' +
+        '<span class="line"><span class="bagra-tag">&lt;b&gt;</span></span>' +
         '</code></pre>',
     );
   });
@@ -159,7 +161,7 @@ describe('renderHtml', () => {
     ];
 
     const html = renderHtml(events, ':');
-    expect(html).toContain('class="tsh-punctuation-delimiter"');
+    expect(html).toContain('class="bagra-punctuation-delimiter"');
   });
 
   it('emits data-theme attribute on <pre> when theme is provided', () => {
@@ -169,7 +171,7 @@ describe('renderHtml', () => {
       { type: 'line-end' },
     ];
     const html = renderHtml(events, 'hello', 'nord');
-    expect(html).toMatch(/^<pre class="tsh" data-theme="nord"><code>/);
+    expect(html).toMatch(/^<pre class="bagra" data-theme="nord"><code>/);
   });
 
   it('does not emit data-theme when theme is undefined', () => {
@@ -179,7 +181,7 @@ describe('renderHtml', () => {
       { type: 'line-end' },
     ];
     const html = renderHtml(events, 'hello');
-    expect(html).toMatch(/^<pre class="tsh"><code>/);
+    expect(html).toMatch(/^<pre class="bagra"><code>/);
     expect(html).not.toContain('data-theme');
   });
 
@@ -206,7 +208,7 @@ describe('renderHtml', () => {
 
     const html = renderHtml(events, source);
     expect(html).toBe(
-      '<pre class="tsh"><code>' +
+      '<pre class="bagra"><code>' +
         '<span class="line">ab</span>\n' +
         '<span class="line">cd</span>' +
         '</code></pre>',
@@ -231,9 +233,9 @@ describe('renderHtml', () => {
 
     const html = renderHtml(events, source);
     expect(html).toBe(
-      '<pre class="tsh"><code>' +
-        '<span class="line"><span class="tsh-comment">/*a</span></span>\n' +
-        '<span class="line"><span class="tsh-comment">b*/</span></span>' +
+      '<pre class="bagra"><code>' +
+        '<span class="line"><span class="bagra-comment">/*a</span></span>\n' +
+        '<span class="line"><span class="bagra-comment">b*/</span></span>' +
         '</code></pre>',
     );
   });
@@ -254,7 +256,7 @@ describe('renderHtml', () => {
 
     const html = renderHtml(events, source);
     expect(html).toBe(
-      '<pre class="tsh"><code>' +
+      '<pre class="bagra"><code>' +
         '<span class="line">a</span>\n' +
         '<span class="line"></span>\n' +
         '<span class="line">b</span>' +

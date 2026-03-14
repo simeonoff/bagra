@@ -1,19 +1,19 @@
 {
-  "name": "@tree-sitter-highlight/wasm",
+  "name": "@bagra/wasm",
   "version": "0.1.0",
-  "description": "Inlined web-tree-sitter WASM binary for @tree-sitter-highlight",
+  "description": "Inlined web-tree-sitter WASM binary for @bagra",
   "keywords": [
     "tree-sitter",
     "wasm",
     "web-tree-sitter"
   ],
-  "homepage": "https://github.com/simeonoff/tree-sitter-highlight-web#readme",
+  "homepage": "https://github.com/simeonoff/bagra#readme",
   "bugs": {
-    "url": "https://github.com/simeonoff/tree-sitter-highlight-web/issues"
+    "url": "https://github.com/simeonoff/bagra/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/simeonoff/tree-sitter-highlight-web.git",
+    "url": "git+https://github.com/simeonoff/bagra.git",
     "directory": "packages/wasm"
   },
   "license": "MIT",

@@ -4,7 +4,7 @@ import { captureNameToClass } from './html';
 /**
  * Render a highlight event stream into a HAST (Hypertext Abstract Syntax Tree).
  *
- * The output is a `root` node containing a `<pre class="tsh">` element with
+ * The output is a `root` node containing a `<pre class="bagra">` element with
  * a `<code>` element inside. Each line is a `<span class="line">` element,
  * and each highlighted region is a `<span>` element with the appropriate
  * CSS class.
@@ -98,7 +98,7 @@ export function renderHast(
   };
 
   const preProperties: Record<string, string | number | boolean | string[]> = {
-    className: ['tsh'],
+    className: ['bagra'],
   };
 
   if (theme) {

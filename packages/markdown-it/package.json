@@ -1,5 +1,5 @@
 {
-  "name": "@tree-sitter-highlight/markdown-it",
+  "name": "@bagra/markdown-it",
   "version": "0.1.0",
   "description": "markdown-it plugin for tree-sitter syntax highlighting",
   "keywords": [
@@ -8,13 +8,13 @@
     "markdown-it",
     "vitepress"
   ],
-  "homepage": "https://github.com/simeonoff/tree-sitter-highlight-web#readme",
+  "homepage": "https://github.com/simeonoff/bagra#readme",
   "bugs": {
-    "url": "https://github.com/simeonoff/tree-sitter-highlight-web/issues"
+    "url": "https://github.com/simeonoff/bagra/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/simeonoff/tree-sitter-highlight-web.git",
+    "url": "git+https://github.com/simeonoff/bagra.git",
     "directory": "packages/markdown-it"
   },
   "license": "MIT",
@@ -35,6 +35,6 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@tree-sitter-highlight/core": "^0.1.0"
+    "@bagra/core": "^0.1.0"
   }
 }

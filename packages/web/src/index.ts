@@ -7,7 +7,7 @@
  *
  * @example
  * ```ts
- * import { createHighlighter } from '@tree-sitter-highlight/web';
+ * import { createHighlighter } from '@bagra/web';
  *
  * const hl = await createHighlighter({
  *   languages: {
@@ -24,17 +24,14 @@
  * @module
  */
 
-import type {
-  Highlighter,
-  HighlighterOptions,
-} from '@tree-sitter-highlight/core';
-import { createHighlighter as _createHighlighter } from '@tree-sitter-highlight/core';
-import { wasmBinary } from '@tree-sitter-highlight/wasm';
+import type { Highlighter, HighlighterOptions } from '@bagra/core';
+import { createHighlighter as _createHighlighter } from '@bagra/core';
+import { wasmBinary } from '@bagra/wasm';
 
 /**
  * Create a new highlighter with the inlined `web-tree-sitter` WASM binary.
  *
- * This is the same as `createHighlighter` from `@tree-sitter-highlight/core`,
+ * This is the same as `createHighlighter` from `@bagra/core`,
  * but the `wasmBinary` option is automatically provided.
  */
 export async function createHighlighter(
@@ -53,4 +50,4 @@ export type {
   HighlighterOptions,
   LanguageDefinition,
   Token,
-} from '@tree-sitter-highlight/core';
+} from '@bagra/core';

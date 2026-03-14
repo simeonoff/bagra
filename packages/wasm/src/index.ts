@@ -11,8 +11,8 @@ import _wasmBinary from 'web-tree-sitter/web-tree-sitter.wasm';
  *
  * @example
  * ```ts
- * import { createHighlighter } from '@tree-sitter-highlight/core';
- * import { wasmBinary } from '@tree-sitter-highlight/wasm';
+ * import { createHighlighter } from '@bagra/core';
+ * import { wasmBinary } from '@bagra/wasm';
  *
  * const hl = await createHighlighter({
  *   wasmBinary,

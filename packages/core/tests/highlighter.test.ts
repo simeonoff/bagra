@@ -39,7 +39,7 @@ describe('createHighlighter', () => {
 
     // Verify it actually works end-to-end
     const html = hl.codeToHtml('scss', '$x: 1;');
-    expect(html).toContain('tsh-variable');
+    expect(html).toContain('bagra-variable');
   });
 
   it('creates a highlighter with highlights as { content }', async () => {
@@ -94,7 +94,7 @@ describe('createHighlighter', () => {
 
     expect(hl.hasLanguage('scss')).toBe(true);
     const html = hl.codeToHtml('scss', '$x: 1;');
-    expect(html).toContain('tsh-variable');
+    expect(html).toContain('bagra-variable');
   });
 
   it('produces identical output with path vs { content }', async () => {
@@ -139,20 +139,20 @@ describe('codeToHtml', () => {
   it('highlights a simple SCSS variable declaration', () => {
     const html = hl.codeToHtml('scss', '$color: red;');
 
-    expect(html).toMatch(/^<pre class="tsh"><code>.*<\/code><\/pre>$/);
+    expect(html).toMatch(/^<pre class="bagra"><code>.*<\/code><\/pre>$/);
     expect(html).toContain('<span class="line">');
-    expect(html).toContain('tsh-variable');
+    expect(html).toContain('bagra-variable');
     expect(html).toContain('$color');
-    expect(html).toContain('tsh-punctuation-delimiter');
+    expect(html).toContain('bagra-punctuation-delimiter');
   });
 
   it('highlights a SCSS rule with selector and properties', () => {
     const code = '.container { color: red; }';
     const html = hl.codeToHtml('scss', code);
 
-    expect(html).toContain('tsh-type'); // class selector
+    expect(html).toContain('bagra-type'); // class selector
     expect(html).toContain('container');
-    expect(html).toContain('tsh-punctuation-bracket'); // { }
+    expect(html).toContain('bagra-punctuation-bracket'); // { }
   });
 
   it('preserves the original source text', () => {
@@ -168,13 +168,13 @@ describe('codeToHtml', () => {
   it('handles empty source code', () => {
     const html = hl.codeToHtml('scss', '');
     expect(html).toBe(
-      '<pre class="tsh"><code><span class="line"></span></code></pre>',
+      '<pre class="bagra"><code><span class="line"></span></code></pre>',
     );
   });
 
   it('emits data-theme on <pre> when theme option is provided', () => {
     const html = hl.codeToHtml('scss', '$x: 1;', { theme: 'nord' });
-    expect(html).toMatch(/^<pre class="tsh" data-theme="nord"><code>/);
+    expect(html).toMatch(/^<pre class="bagra" data-theme="nord"><code>/);
   });
 
   it('does not emit data-theme when no theme option', () => {
@@ -286,7 +286,7 @@ describe('codeToHast', () => {
     expect(root.type).toBe('root');
     const pre = root.children[0] as HastElement;
     expect(pre.tagName).toBe('pre');
-    expect(pre.properties.className).toEqual(['tsh']);
+    expect(pre.properties.className).toEqual(['bagra']);
 
     const code = pre.children[0] as HastElement;
     expect(code.tagName).toBe('code');
@@ -357,11 +357,11 @@ describe('codeToHast', () => {
     const spans = findHighlightSpans(code.children);
     expect(spans.length).toBeGreaterThan(0);
 
-    // All highlight span class names should start with 'tsh-'
+    // All highlight span class names should start with 'bagra-'
     for (const span of spans) {
       const classes = span.properties.className as string[];
       for (const cls of classes) {
-        expect(cls).toMatch(/^tsh-/);
+        expect(cls).toMatch(/^bagra-/);
       }
     }
   });
