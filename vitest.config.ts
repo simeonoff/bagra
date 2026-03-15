@@ -7,6 +7,7 @@ export default defineConfig({
       'packages/core',
       'packages/wasm',
       'packages/themes',
+      'packages/rehype',
       {
         plugins: [wasmInlinePlugin()],
         resolve: {

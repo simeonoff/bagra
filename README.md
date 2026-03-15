@@ -1,16 +1,18 @@
 # bagra
 
-Syntax highlighting for the web using tree-sitter WASM grammars. Uses the actual parser grammar for tokenization instead of regex approximations.
+Parser-accurate syntax highlighting for the web, powered by tree-sitter WASM grammars. Uses the actual parser grammar for tokenization instead of regex approximations.
 
-> This project is in early development. APIs will change.
+> This project is in early development. APIs may change.
 
 ## Packages
 
-- `@bagra/core` — core highlighter (bring your own WASM binary)
-- `@bagra/web` — batteries-included entry point with inlined WASM
-- `@bagra/wasm` — inlined `web-tree-sitter` binary
-- `@bagra/markdown-it` — markdown-it plugin (not yet implemented)
-- `@bagra/rehype` — rehype plugin (not yet implemented)
+| Package | Description | Status |
+|---|---|---|
+| [`@bagrajs/core`](packages/core) | Core highlighter (bring your own WASM binary) | Available |
+| [`@bagrajs/web`](packages/web) | Batteries-included entry point with inlined WASM | Available |
+| [`@bagrajs/wasm`](packages/wasm) | Inlined `web-tree-sitter` binary | Available |
+| [`@bagrajs/rehype`](packages/rehype) | rehype plugin for unified/Astro pipelines | Available |
+| [`@bagrajs/markdown-it`](packages/markdown-it) | markdown-it plugin for VitePress | Planned |
 
 ## License
 

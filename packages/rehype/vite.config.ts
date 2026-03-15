@@ -9,7 +9,7 @@ export default defineConfig({
       fileName: 'index',
     },
     rollupOptions: {
-      external: ['@bagrajs/core'],
+      external: ['@bagrajs/core', 'unist-util-visit'],
     },
   },
   plugins: [dts({ rollupTypes: false })],
