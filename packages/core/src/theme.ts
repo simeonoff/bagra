@@ -89,6 +89,10 @@ const BASE16_KEYS: readonly (keyof Base16Scheme)[] = [
   'base0F',
 ] as const;
 
+
+/** A lookup map to find the canonical key (with uppercase hex digit) from a lowercase key. */
+const KEY_LOOKUP = new Map(BASE16_KEYS.map((k) => [k.toLowerCase(), k]));
+
 /**
  * Normalize a color value to ensure it has a `#` prefix if it looks like
  * a bare hex value (6 or 8 hex characters).
@@ -101,6 +105,19 @@ function normalizeColor(value: string): string {
   }
 
   return trimmed;
+}
+
+function validateScheme(
+  scheme: Partial<Base16Scheme>,
+  context: string,
+): asserts scheme is Base16Scheme {
+  const missing = BASE16_KEYS.filter((key) => !scheme[key]);
+
+  if (missing.length > 0) {
+    throw new Error(
+      `${context} is missing required Base16 colors: ${missing.join(', ')}`,
+    );
+  }
 }
 
 /**
@@ -125,25 +142,12 @@ function normalizeColor(value: string): string {
  * @throws {Error} If any of the 16 required Base16 keys are missing.
  */
 export function generateScheme(scheme: Base16Scheme): string {
-  const missing: string[] = [];
-
-  for (const key of BASE16_KEYS) {
-    if (scheme[key] === undefined || scheme[key] === null) {
-      missing.push(key);
-    }
-  }
-
-  if (missing.length > 0) {
-    throw new Error(
-      `Missing required Base16 colors: ${missing.join(', ')}. ` +
-        'A Base16 scheme must define all 16 colors (base00 through base0F).',
-    );
-  }
+  validateScheme(scheme, 'Invalid Base16 scheme');
 
   const lines: string[] = [];
 
   for (const key of BASE16_KEYS) {
-    const color = normalizeColor(String(scheme[key]));
+    const color = normalizeColor(scheme[key]);
     lines.push(`  --${key}: ${color};`);
   }
 
@@ -177,7 +181,7 @@ export function generateScheme(scheme: Base16Scheme): string {
  * ```
  *
  * @param yaml - The YAML file content as a string.
- * @returns A `Base16Scheme` object with all 16 colors (with `#` prefix).
+ * @returns A {@link Base16Scheme} object with all 16 colors (with `#` prefix).
  * @throws {Error} If any of the 16 required Base16 keys are missing.
  */
 export function parseBase16Yaml(yaml: string): Base16Scheme {
@@ -204,29 +208,13 @@ export function parseBase16Yaml(yaml: string): Base16Scheme {
     const rawKey = match[1].toLowerCase();
     const value = match[2] ?? match[3]; // quoted value or unquoted value
 
-    // Find the canonical key (preserving the uppercase hex digit from the interface)
-    const canonicalKey = BASE16_KEYS.find((k) => k.toLowerCase() === rawKey);
-
-    if (canonicalKey) {
-      result[canonicalKey] = `#${value.replace(/^#/, '')}`;
+    if (KEY_LOOKUP.has(rawKey)) {
+      const key = KEY_LOOKUP.get(rawKey)!;
+      result[key] = `#${value.replace(/^#/, '')}`;
     }
   }
 
-  // Validate all 16 keys are present
-  const missing: string[] = [];
-
-  for (const key of BASE16_KEYS) {
-    if (!result[key]) {
-      missing.push(key);
-    }
-  }
-
-  if (missing.length > 0) {
-    throw new Error(
-      `Invalid Base16 YAML: missing colors ${missing.join(', ')}. ` +
-        'Expected all 16 Base16 colors (base00 through base0F).',
-    );
-  }
+  validateScheme(result, 'Invalid Base16 YAML');
 
   return result as Base16Scheme;
 }

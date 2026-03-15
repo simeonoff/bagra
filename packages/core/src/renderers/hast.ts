@@ -1,5 +1,5 @@
 import type { HastElement, HastNode, HastRoot, HighlightEvent } from '../types';
-import { captureNameToClass } from './html';
+import { captureNameToClass } from '../utils';
 
 /**
  * Render a highlight event stream into a HAST (Hypertext Abstract Syntax Tree).
@@ -17,6 +17,7 @@ import { captureNameToClass } from './html';
  * @param events - The line-wrapped event stream from `generateEvents()`
  * @param source - The original source code string
  * @param theme - Optional theme name, sets `data-theme` attribute on the `<pre>` element
+ * @returns A {@link HastRoot} node representing the highlighted code block.
  */
 export function renderHast(
   events: HighlightEvent[],

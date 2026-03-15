@@ -39,75 +39,86 @@ export function generateEvents(
 // ---------------------------------------------------------------------------
 
 /**
+ * Factory for creating a flat event emitter,
+ * which generates a capture-based event stream without any line awareness.
+ */
+function createFlatEmitter() {
+  const events: HighlightEvent[] = [];
+  const stack: ActiveHighlight[] = [];
+
+  let cursor = 0;
+
+  /** Emit a source event if there's text between the cursor and `to`, then move the cursor to `to`. */
+  function emitSourceUpTo(to: number) {
+    if (to > cursor) {
+      events.push({ type: 'source', start: cursor, end: to });
+      cursor = to;
+    }
+  }
+
+  /**
+   * Close highlights that end at or before `upTo`, emitting source and `end` events for each one.
+   * If omitted, closes all remaining highlights.
+   */
+  function closeHighlightsUpTo(upTo?: number): void {
+    while (
+      stack.length > 0 &&
+      (upTo === undefined || stack.at(-1)!.endIndex <= upTo)
+    ) {
+      const { endIndex } = stack.at(-1)!;
+
+      emitSourceUpTo(endIndex);
+
+      stack.pop();
+      events.push({ type: 'end' });
+    }
+  }
+
+  /** Open a new highlight, nesting inside any active parent. */
+  function openHighlight(captureName: string, endIndex: number): void {
+    stack.push({ captureName, endIndex });
+    events.push({ type: 'start', captureName });
+  }
+
+  return {
+    get cursor() {
+      return cursor;
+    },
+    get events() {
+      return events;
+    },
+    emitSourceUpTo,
+    closeHighlightsUpTo,
+    openHighlight,
+  };
+}
+
+/**
  * Generate a flat event stream from deduplicated captures.
- *
- * This is the original algorithm — it produces properly-nested highlight events
- * without any line awareness.
+ * Produces properly-nested highlight events without any line awareness.
  */
 function generateFlatEvents(
   captures: QueryCapture[],
   sourceLength: number,
 ): HighlightEvent[] {
-  const events: HighlightEvent[] = [];
-  const stack: ActiveHighlight[] = [];
-  let cursor = 0;
+  const emitter = createFlatEmitter();
 
   for (const capture of captures) {
     const start = capture.node.startIndex;
     const end = capture.node.endIndex;
 
-    // Skip zero-length captures
-    if (start >= end) continue;
+    if (start >= end) continue; // skip empty captures
+    if (start < emitter.cursor) continue; // skip captures that start before the cursor
 
-    // Skip captures that start before the cursor (overlapping with a
-    // previously emitted higher-priority capture at the same position)
-    if (start < cursor) {
-      // TODO: handle partial overlap for advanced injection scenarios
-      continue;
-    }
-
-    // Close any active highlights that end at or before this capture's start
-    while (stack.length > 0 && stack[stack.length - 1].endIndex <= start) {
-      emitSourceUpTo(events, cursor, stack[stack.length - 1].endIndex);
-      cursor = stack[stack.length - 1].endIndex;
-      stack.pop();
-      events.push({ type: 'end' });
-    }
-
-    // Emit any unhighlighted source text between the cursor and this capture
-    emitSourceUpTo(events, cursor, start);
-    cursor = start;
-
-    // Open the new highlight (nesting inside any active parent)
-    stack.push({ captureName: capture.name, endIndex: end });
-    events.push({ type: 'start', captureName: capture.name });
+    emitter.closeHighlightsUpTo(start);
+    emitter.emitSourceUpTo(start);
+    emitter.openHighlight(capture.name, end);
   }
 
-  // Close all remaining active highlights
-  while (stack.length > 0) {
-    emitSourceUpTo(events, cursor, stack[stack.length - 1].endIndex);
-    cursor = stack[stack.length - 1].endIndex;
-    stack.pop();
-    events.push({ type: 'end' });
-  }
+  emitter.closeHighlightsUpTo(); // close any remaining highlights at the end of the source
+  emitter.emitSourceUpTo(sourceLength); // emit any remaining source after the last highlight
 
-  // Emit any trailing unhighlighted source text
-  emitSourceUpTo(events, cursor, sourceLength);
-
-  return events;
-}
-
-/**
- * Emit a Source event if there's any text between `from` and `to`.
- */
-function emitSourceUpTo(
-  events: HighlightEvent[],
-  from: number,
-  to: number,
-): void {
-  if (to > from) {
-    events.push({ type: 'source', start: from, end: to });
-  }
+  return emitter.events;
 }
 
 // ---------------------------------------------------------------------------
@@ -130,11 +141,8 @@ function wrapWithLines(
   source: string,
 ): HighlightEvent[] {
   const events: HighlightEvent[] = [];
-
-  // Track active highlight spans so we can close/reopen across line breaks
   const highlightStack: string[] = [];
 
-  // Open the first line
   events.push({ type: 'line-start' });
 
   for (const event of flatEvents) {
@@ -191,6 +199,7 @@ function wrapWithLines(
             end: event.end,
           });
         }
+
         break;
       }
     }

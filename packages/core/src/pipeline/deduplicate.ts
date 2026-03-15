@@ -19,6 +19,10 @@ import type { QueryCapture } from 'web-tree-sitter';
  *
  * The input captures must already be sorted by position (as returned by
  * `query.captures()`).
+ *
+ * @param captures - The list of captures to deduplicate.
+ *
+ * @returns A new list of captures with duplicates removed, preserving the last match for each node.
  */
 export function deduplicateCaptures(captures: QueryCapture[]): QueryCapture[] {
   if (captures.length === 0) return captures;

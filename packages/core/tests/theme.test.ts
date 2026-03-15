@@ -139,7 +139,7 @@ describe('generateScheme', () => {
     delete partial.base0F;
 
     expect(() => generateScheme(partial as unknown as Base16Scheme)).toThrow(
-      /Missing required Base16 colors: base0E, base0F/,
+      /Invalid Base16 scheme is missing required Base16 colors: base0E, base0F/,
     );
   });
 
@@ -150,7 +150,7 @@ describe('generateScheme', () => {
     };
 
     expect(() => generateScheme(scheme as unknown as Base16Scheme)).toThrow(
-      /Missing required Base16 colors: base03/,
+      /Invalid Base16 scheme is missing required Base16 colors: base03/,
     );
   });
 });
@@ -376,12 +376,12 @@ base01: "282a2e"
 base02: "373b41"`;
 
     expect(() => parseBase16Yaml(yaml)).toThrow(
-      /missing colors base03, base04/,
+      /Invalid Base16 YAML is missing required Base16 colors: base03, base04, base05, base06, base07, base08, base09, base0A, base0B, base0C, base0D, base0E, base0F/,
     );
   });
 
   it('throws on empty input', () => {
-    expect(() => parseBase16Yaml('')).toThrow(/missing colors/);
+    expect(() => parseBase16Yaml('')).toThrow(/Invalid Base16 YAML is missing required Base16 colors: base00, base01, base02, base03, base04, base05, base06, base07, base08, base09, base0A, base0B, base0C, base0D, base0E, base0F/);
   });
 
   it('handles inline comments after values', () => {

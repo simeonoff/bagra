@@ -8,6 +8,7 @@ import { resolveHighlights } from './resolve-highlights';
 import type {
   CodeOptions,
   HastRoot,
+  HighlightEvent,
   Highlighter,
   HighlighterOptions,
   LanguageDefinition,
@@ -20,7 +21,7 @@ interface LoadedLanguage {
   highlights: string;
 }
 
-let parserInitialized = false;
+let initPromise: Promise<void> | null = null;
 
 /**
  * Initialize the tree-sitter WASM runtime.
@@ -32,18 +33,19 @@ let parserInitialized = false;
 async function initParser(
   wasmBinary?: ArrayBuffer | Uint8Array,
 ): Promise<void> {
-  if (parserInitialized) return;
+  if (!initPromise) {
+    const moduleOptions: Record<string, unknown> = {};
 
-  const moduleOptions: Record<string, unknown> = {};
+    if (wasmBinary) {
+      // Ensure we pass an ArrayBuffer, not a Uint8Array view
+      moduleOptions.wasmBinary =
+        wasmBinary instanceof Uint8Array ? wasmBinary.buffer : wasmBinary;
+    }
 
-  if (wasmBinary) {
-    // Ensure we pass an ArrayBuffer, not a Uint8Array view
-    moduleOptions.wasmBinary =
-      wasmBinary instanceof Uint8Array ? wasmBinary.buffer : wasmBinary;
+    initPromise = Parser.init(moduleOptions);
   }
 
-  await Parser.init(moduleOptions);
-  parserInitialized = true;
+  return initPromise;
 }
 
 /**
@@ -105,7 +107,7 @@ function warnUnsupportedPredicates(query: Query, languageName: string): void {
  * Resolves the highlights query from a file path/URL if a string is provided,
  * or uses the content directly if `{ content: string }` is provided.
  */
-async function loadLanguage(
+async function initLanguage(
   name: string,
   definition: LanguageDefinition,
 ): Promise<LoadedLanguage> {
@@ -153,7 +155,7 @@ export async function createHighlighter(
     const entries = Object.entries(options.languages);
     const loaded = await Promise.all(
       entries.map(async ([name, def]) => {
-        const lang = await loadLanguage(name, def);
+        const lang = await initLanguage(name, def);
         return [name, lang] as const;
       }),
     );
@@ -171,7 +173,7 @@ export async function createHighlighter(
     }
   }
 
-  function assertLanguage(lang: string): LoadedLanguage {
+  function requireLanguage(lang: string): LoadedLanguage {
     const loaded = languages.get(lang);
 
     if (!loaded) {
@@ -184,10 +186,10 @@ export async function createHighlighter(
     return loaded;
   }
 
-  function highlight(lang: string, code: string) {
+  function highlight(lang: string, code: string): HighlightEvent[] {
     assertNotDisposed();
 
-    const loaded = assertLanguage(lang);
+    const loaded = requireLanguage(lang);
 
     parser.setLanguage(loaded.language);
     const tree = parser.parse(code);
@@ -199,9 +201,8 @@ export async function createHighlighter(
     try {
       const captures = loaded.query.captures(tree.rootNode);
       const deduplicated = deduplicateCaptures(captures);
-      const events = generateEvents(deduplicated, code.length, code);
 
-      return { events, code };
+      return generateEvents(deduplicated, code.length, code);
     } finally {
       tree.delete();
     }
@@ -209,18 +210,18 @@ export async function createHighlighter(
 
   return {
     codeToHtml(lang: string, code: string, options?: CodeOptions): string {
-      const { events, code: src } = highlight(lang, code);
-      return renderHtml(events, src, options?.theme);
+      const events = highlight(lang, code);
+      return renderHtml(events, code, options?.theme);
     },
 
     codeToHast(lang: string, code: string, options?: CodeOptions): HastRoot {
-      const { events, code: src } = highlight(lang, code);
-      return renderHast(events, src, options?.theme);
+      const events = highlight(lang, code);
+      return renderHast(events, code, options?.theme);
     },
 
     codeToTokens(lang: string, code: string): Token[][] {
-      const { events, code: src } = highlight(lang, code);
-      return renderTokens(events, src);
+      const events = highlight(lang, code);
+      return renderTokens(events, code);
     },
 
     async loadLanguage(
@@ -229,7 +230,7 @@ export async function createHighlighter(
     ): Promise<void> {
       assertNotDisposed();
 
-      const lang = await loadLanguage(name, definition);
+      const lang = await initLanguage(name, definition);
       languages.set(name, lang);
     },
 

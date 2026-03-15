@@ -23,6 +23,7 @@ describe('createHighlighter', () => {
 
   it('creates a highlighter with no languages', async () => {
     hl = await createHighlighter();
+
     expect(hl.getLanguages()).toEqual([]);
     expect(hl.hasLanguage('scss')).toBe(false);
   });
