@@ -13,6 +13,7 @@ import type { HighlightEvent, Token } from '../types';
  *
  * @param events - The line-wrapped event stream from `generateEvents()`
  * @param source - The original source code string
+ * @returns An array of lines, where each line is an array of {@link Token}.
  */
 export function renderTokens(
   events: HighlightEvent[],

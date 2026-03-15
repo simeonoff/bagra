@@ -13,7 +13,7 @@ export interface LanguageDefinition {
   /**
    * The tree-sitter highlights query for this language.
    *
-   * - `string` — file path (Node.js/Bun) or URL (browser) to a `.scm` file
+   * - `string` — URL (browser) or file path (Node.js) to a `.scm` file
    * - `{ content: string }` — pre-loaded query text content
    *
    * When a string path is provided, the library resolves it automatically:
@@ -142,6 +142,13 @@ export interface Highlighter {
    * ```ts
    * import '@bagrajs/core/theme.css';
    * ```
+   *
+   * @param lang - The language name (e.g. 'javascript')
+   * @param code - The source code to highlight
+   * @param options - Optional rendering options (e.g. theme)
+   *
+   * @returns An HTML string containing the highlighted code block
+   * @throws {Error} If the highlighter has been disposed or the language is not loaded.
    */
   codeToHtml(lang: string, code: string, options?: CodeOptions): string;
 
@@ -149,6 +156,13 @@ export interface Highlighter {
    * Highlight source code and return a HAST (Hypertext Abstract Syntax Tree).
    *
    * The output can be used directly in unified/rehype pipelines.
+   *
+   * @param lang - The language name (e.g. 'javascript')
+   * @param code - The source code to highlight
+   * @param options - Optional rendering options (e.g. theme)
+   *
+   * @returns A {@link HastRoot} node representing the highlighted code block
+   * @throws {Error} If the highlighter has been disposed or the language is not loaded.
    */
   codeToHast(lang: string, code: string, options?: CodeOptions): HastRoot;
 
@@ -157,21 +171,38 @@ export interface Highlighter {
    * an array of tokens.
    *
    * Useful for custom renderers (React, Canvas, terminal, etc.).
+   *
+   * @param lang - The language name (e.g. 'javascript')
+   * @param code - The source code to highlight
+   *
+   * @returns An array of lines, where each line is an array of {@link Token}.
+   * @throws {Error} If the highlighter has been disposed or the language is not loaded.
    */
   codeToTokens(lang: string, code: string): Token[][];
 
   /**
    * Load a language after the highlighter has been created.
+   * @param name - The language name (e.g. 'javascript')
+   * @param definition - The language definition, including grammar and highlights
+   *
+   * @returns A promise that resolves when the language is loaded and ready to use
+   * @throws {Error} If the highlighter has been disposed.
    */
   loadLanguage(name: string, definition: LanguageDefinition): Promise<void>;
 
   /**
    * Check if a language has been loaded.
+   *
+   * @param name - The language name to check (e.g. 'javascript')
+   *
+   * @returns `true` if the language is loaded, `false` otherwise
    */
   hasLanguage(name: string): boolean;
 
   /**
    * Get the list of loaded language names.
+   *
+   * @returns An array of loaded language names (e.g. `['javascript', 'python']`)
    */
   getLanguages(): string[];
 
