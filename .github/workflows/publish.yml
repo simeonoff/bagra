@@ -3,7 +3,7 @@ name: Publish
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 jobs:
   publish:
@@ -32,6 +32,13 @@ jobs:
 
       - name: Publish packages
         run: |
-          for pkg in packages/core packages/wasm packages/web packages/markdown-it packages/rehype; do
+          for pkg in \
+            packages/core \
+            packages/wasm \
+            packages/web \
+            packages/markdown-it \
+            packages/rehype \
+            packages/themes \
+          ; do
             npm publish "./$pkg" --provenance --access public
           done

@@ -1,0 +1,48 @@
+name: Update Themes
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Every Monday at 6:00 AM UTC
+  workflow_dispatch: {} # Allow manual triggering of the workflow
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-themes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - run: npm ci
+
+      - name: Generate themes
+        run: npm run generate-themes -w packages/themes
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet packages/themes/src/ packages/themes/.upstream-ref; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore(themes): update base16 schemes from tinted-theming"
+          branch: automation/update-themes
+          title: "chore(themes): update base16 schemes from tinted-theming"
+          body: |
+            Automated update of base16 color schemes from
+            [tinted-theming/schemes](https://github.com/tinted-theming/schemes).
+            Review the diff to see which themes were added, updated, or removed.
+          labels: dependencies, automated
+          delete-branch: true

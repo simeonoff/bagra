@@ -41,6 +41,9 @@ export async function createHighlighter(
 }
 
 export type {
+  BagraTheme,
+  Base16Scheme,
+  CodeOptions,
   HastElement,
   HastNode,
   HastRoot,
@@ -50,4 +53,9 @@ export type {
   HighlighterOptions,
   LanguageDefinition,
   Token,
+} from '@bagrajs/core';
+
+export {
+  generateThemeCSS,
+  generateThemeCSSWithMediaQuery,
 } from '@bagrajs/core';

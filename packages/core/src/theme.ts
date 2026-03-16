@@ -1,25 +1,22 @@
 /**
  * Theme utilities for bagra.
  *
- * Provides functions to generate CSS custom property declarations from
- * Base16 color schemes. The output is bare CSS declarations — the consumer
- * decides where to place them (`:root`, `.bagra[data-theme="..."]`, etc.).
+ * Provides types and functions for working with Base16 color schemes:
+ *
+ * - {@link BagraTheme} — the theme object consumed by the highlighter
+ * - {@link generateScheme} — generates bare CSS custom property declarations
+ * - {@link generateThemeCSS} — generates scoped CSS blocks for multiple themes
+ * - {@link generateThemeCSSWithMediaQuery} — generates `prefers-color-scheme` media query blocks
  *
  * @example
  * ```ts
- * import { generateScheme, parseBase16Yaml } from '@bagrajs/core/theme';
+ * import { generateThemeCSS } from '@bagrajs/core';
+ * import { nord, ayuLight } from '@bagrajs/themes';
  *
- * // From a JS object
- * const css = generateScheme({
- *   base00: '#2e3440', base01: '#3b4252', base02: '#434c5e', base03: '#4c566a',
- *   base04: '#d8dee9', base05: '#e5e9f0', base06: '#eceff4', base07: '#8fbcbb',
- *   base08: '#bf616a', base09: '#d08770', base0A: '#ebcb8b', base0B: '#a3be8c',
- *   base0C: '#88c0d0', base0D: '#81a1c1', base0E: '#b48ead', base0F: '#5e81ac',
- * });
- *
- * // From a tinted-theming YAML file
- * const scheme = parseBase16Yaml(yamlString);
- * const css = generateScheme(scheme);
+ * // Generate scoped CSS for loaded themes
+ * const css = generateThemeCSS([nord, ayuLight]);
+ * // => .bagra[data-theme="nord"] { --base00: #2e3440; ... }
+ * //    .bagra[data-theme="ayu-light"] { --base00: #f8f9fa; ... }
  * ```
  *
  * @module
@@ -89,10 +86,6 @@ const BASE16_KEYS: readonly (keyof Base16Scheme)[] = [
   'base0F',
 ] as const;
 
-
-/** A lookup map to find the canonical key (with uppercase hex digit) from a lowercase key. */
-const KEY_LOOKUP = new Map(BASE16_KEYS.map((k) => [k.toLowerCase(), k]));
-
 /**
  * Normalize a color value to ensure it has a `#` prefix if it looks like
  * a bare hex value (6 or 8 hex characters).
@@ -154,67 +147,63 @@ export function generateScheme(scheme: Base16Scheme): string {
   return lines.join('\n');
 }
 
+export interface BagraTheme {
+  name: string;
+  displayName?: string;
+  variant?: 'light' | 'dark' | string;
+  author?: string;
+  colors: Base16Scheme;
+}
+
 /**
- * Parse a tinted-theming Base16 YAML scheme file into a `Base16Scheme` object.
+ * Generate CSS blocks for multiple themes, each scoped to a selector like `.bagra[data-theme="..."]`.
+ * The output is a string of CSS rules that can be included in a stylesheet.
  *
- * Handles the standard tinted-theming/schemes YAML format:
- *
- * ```yaml
- * system: "base16"
- * name: "Tomorrow Night"
- * author: "Chris Kempson"
- * variant: "dark"
- * palette:
- *   base00: "1d1f21"
- *   base01: "282a2e"
- *   ...
- * ```
- *
- * Also supports the legacy flat format (no `palette:` key):
- *
- * ```yaml
- * scheme: "Tomorrow Night"
- * author: "Chris Kempson"
- * base00: "1d1f21"
- * base01: "282a2e"
- * ...
- * ```
- *
- * @param yaml - The YAML file content as a string.
- * @returns A {@link Base16Scheme} object with all 16 colors (with `#` prefix).
- * @throws {Error} If any of the 16 required Base16 keys are missing.
+ * @param themes - An array of theme {@link BagraTheme} objects, each with a name and Base16 colors.
+ * @return A string of CSS rules, one for each theme, with custom properties for the Base16 colors.
  */
-export function parseBase16Yaml(yaml: string): Base16Scheme {
-  const result: Partial<Base16Scheme> = {};
-  const lines = yaml.split('\n');
+export function generateThemeCSS(themes: BagraTheme[]): string {
+  const result: string[] = [];
 
-  for (const line of lines) {
-    // Skip comments and empty lines
-    const trimmed = line.trim();
-    if (trimmed === '' || trimmed.startsWith('#')) continue;
+  for (const theme of themes) {
+    const selector = `.bagra[data-theme="${theme.name}"]`;
+    const declarations = generateScheme(theme.colors);
 
-    // Match lines like:
-    //   base0A: "f0c674"        (quoted)
-    //   base0A: f0c674          (unquoted)
-    //   base0A: "#f0c674"       (quoted with #)
-    //   base0A: "f0c674"  # bg  (inline comment after quote)
-    //   base0A: f0c674  # bg    (inline comment after unquoted value)
-    const match = trimmed.match(
-      /^(base0[0-9a-fA-F])\s*:\s*(?:"([^"]+)"|(\S+))(?:\s+#.*)?$/i,
-    );
-
-    if (!match) continue;
-
-    const rawKey = match[1].toLowerCase();
-    const value = match[2] ?? match[3]; // quoted value or unquoted value
-
-    if (KEY_LOOKUP.has(rawKey)) {
-      const key = KEY_LOOKUP.get(rawKey)!;
-      result[key] = `#${value.replace(/^#/, '')}`;
-    }
+    result.push(`${selector} {\n${declarations}\n}`);
   }
 
-  validateScheme(result, 'Invalid Base16 YAML');
+  return result.join('\n\n');
+}
 
-  return result as Base16Scheme;
+/**
+ * Generate `@media (prefers-color-scheme: ...)` blocks scoped to `.bagra`.
+ *
+ * The generated CSS acts as the default theme for code blocks that don't have
+ * an explicit `data-theme` attribute. When a specific theme is set via
+ * `data-theme`, the `.bagra[data-theme="..."]` selector from
+ * {@link generateThemeCSS} wins due to higher specificity.
+ *
+ * @param themes - An object with `light` and `dark` keys, each a {@link BagraTheme}.
+ * @returns A string of CSS rules that apply the appropriate theme based on the user's system preference.
+ */
+export function generateThemeCSSWithMediaQuery(themes: {
+  light: BagraTheme;
+  dark: BagraTheme;
+}): string {
+  const result: string[] = [];
+
+  for (const variant of ['light', 'dark'] as const) {
+    const theme = themes[variant];
+    const mediaQuery = `@media (prefers-color-scheme: ${variant})`;
+    const declarations = generateScheme(theme.colors);
+
+    result.push(
+      `${mediaQuery} {\n  .bagra {\n${declarations
+        .split('\n')
+        .map((line) => `  ${line}`)
+        .join('\n')}\n  }\n}`,
+    );
+  }
+
+  return result.join('\n\n');
 }

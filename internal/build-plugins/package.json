@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./wasm-inline": "./src/vite-plugin-wasm-inline.ts",
-    "./wasm-copy": "./src/vite-plugin-wasm-copy.ts"
+    "./wasm-copy": "./src/vite-plugin-wasm-copy.ts",
+    "./css-copy": "./src/vite-plugin-css-copy.ts"
   }
 }
