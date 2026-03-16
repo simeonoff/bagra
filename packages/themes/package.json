@@ -1,0 +1,52 @@
+{
+  "name": "@bagrajs/themes",
+  "version": "0.1.0",
+  "description": "Themes for the Bagra Highlighter",
+  "keywords": [
+    "tree-sitter",
+    "highlight",
+    "bagra",
+    "themes",
+    "base16",
+    "base24"
+  ],
+  "homepage": "https://github.com/simeonoff/bagra#readme",
+  "bugs": {
+    "url": "https://github.com/simeonoff/bagra/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simeonoff/bagra.git",
+    "directory": "packages/themes"
+  },
+  "license": "MIT",
+  "author": "Simeon Simeonoff",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "development": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./css/*": {
+      "development": "./src/theme/*.css",
+      "default": "./dist/css/*.css"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "generate-themes": "tsx .scripts/generate-themes.ts"
+  },
+  "dependencies": {
+    "@bagrajs/core": "^0.1.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.21.0",
+    "yaml": "^2.8.2"
+  }
+}

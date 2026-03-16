@@ -1,3 +1,5 @@
+import type { BagraTheme } from './theme';
+
 /**
  * Definition for a language that can be loaded into the highlighter.
  */
@@ -54,6 +56,29 @@ export interface HighlighterOptions {
    * ```
    */
   languages?: Record<string, LanguageDefinition>;
+
+  /**
+   * Optional themes to include with the highlighter.
+   * The highlighter itself does not apply themes, but they can be used by renderers
+   * to set CSS variables or classes based on the theme name.
+   *
+   * @example
+   * ```ts
+   * themes: [
+   *   {
+   *     name: 'nord',
+   *     displayName: 'Nord',
+   *     variant: 'dark',
+   *     colors: {
+   *       base00: '#2e3440',
+   *       base05: '#d8dee9',
+   *       ...
+   *     },
+   *   },
+   * ],
+   * ```
+   */
+  themes?: BagraTheme[];
 }
 
 export interface Token {
@@ -124,6 +149,38 @@ export interface CodeOptions {
    * ```
    */
   theme?: string;
+
+  /**
+   * Multiple named themes for CSS-based switching.
+   *
+   * Keys are arbitrary labels (e.g. `'light'`, `'dark'`, `'dim'`).
+   * Values are theme names that must be loaded in the highlighter.
+   *
+   * The first key is used as the default `data-theme` value unless
+   * {@link defaultColor} is specified.
+   *
+   * Mutually exclusive with `theme` — if both are provided, `themes` takes precedence.
+   *
+   * @example
+   * ```ts
+   * highlighter.codeToHtml('scss', code, {
+   *   themes: { light: 'ayu-light', dark: 'nord', dim: 'github-dimmed' },
+   *   defaultColor: 'dark',
+   * });
+   * ```
+   */
+  themes?: Record<string, string>;
+
+  /**
+   * Which theme key from {@link themes} to use as the default `data-theme` value.
+   *
+   * - `string` — must match a key in `themes` (e.g. `'dark'`)
+   * - `false` — no `data-theme` attribute is set; the consumer controls it entirely
+   *
+   * Defaults to the first key in `themes` if not specified.
+   * Ignored when using the single `theme` option.
+   */
+  defaultColor?: string | false;
 }
 
 /**
@@ -205,6 +262,38 @@ export interface Highlighter {
    * @returns An array of loaded language names (e.g. `['javascript', 'python']`)
    */
   getLanguages(): string[];
+
+  /**
+   * Load a theme after the highlighter has been created.
+   *
+   * @param theme - A {@link BagraTheme} object to register
+   */
+  loadTheme(theme: BagraTheme): void;
+
+  /**
+   * Check if a theme has been loaded.
+   *
+   * @param name - The theme name to check (e.g. `'nord'`)
+   * @returns `true` if the theme is loaded, `false` otherwise
+   */
+  hasTheme(name: string): boolean;
+
+  /**
+   * Get the list of loaded theme names.
+   *
+   * @returns An array of loaded theme names (e.g. `['nord', 'ayu-light']`)
+   */
+  getThemes(): string[];
+
+  /**
+   * Get all loaded theme objects.
+   *
+   * Useful for passing to {@link generateThemeCSS} to produce CSS for all
+   * registered themes at once.
+   *
+   * @returns An array of {@link BagraTheme} objects
+   */
+  getLoadedThemes(): BagraTheme[];
 
   /**
    * Free all WASM resources held by this highlighter.

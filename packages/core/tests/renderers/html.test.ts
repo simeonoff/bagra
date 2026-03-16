@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { captureNameToClass, renderHtml } from '../../src/renderers/html';
+import { renderHtml } from '../../src/renderers/html';
 import type { HighlightEvent } from '../../src/types';
+import { captureNameToClass } from '../../src/utils';
 
 describe('captureNameToClass', () => {
   it('prefixes a simple name with bagra-', () => {

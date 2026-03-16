@@ -6,6 +6,7 @@ export default defineConfig({
     projects: [
       'packages/core',
       'packages/wasm',
+      'packages/themes',
       {
         plugins: [wasmInlinePlugin()],
         resolve: {

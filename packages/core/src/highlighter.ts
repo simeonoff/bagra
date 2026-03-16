@@ -5,6 +5,7 @@ import { renderHast } from './renderers/hast';
 import { renderHtml } from './renderers/html';
 import { renderTokens } from './renderers/tokens';
 import { resolveHighlights } from './resolve-highlights';
+import type { BagraTheme } from './theme';
 import type {
   CodeOptions,
   HastRoot,
@@ -121,6 +122,41 @@ async function initLanguage(
 }
 
 /**
+ * Resolve the effective theme name from {@link CodeOptions}.
+ *
+ * Priority:
+ * 1. `theme` — used directly as the theme name (single-theme shorthand)
+ * 2. `themes` + `defaultColor` — looks up the key in the `themes` map
+ * 3. `themes` (no `defaultColor`) — falls back to the first key
+ * 4. `defaultColor: false` — explicitly opts out, returns `undefined`
+ *
+ * @param options - The per-call render options, if any.
+ * @returns The theme name to set as `data-theme`, or `undefined` if none.
+ */
+function resolveTheme(options?: CodeOptions): string | undefined {
+  if (!options) return undefined;
+
+  if (options.theme) {
+    return options.theme;
+  }
+
+  if (options.themes) {
+    if (options.defaultColor === false) {
+      return undefined;
+    }
+
+    if (options.defaultColor) {
+      return options.themes[options.defaultColor];
+    }
+
+    const firstKey = Object.keys(options.themes)[0];
+    return firstKey ? options.themes[firstKey] : undefined;
+  }
+
+  return undefined;
+}
+
+/**
  * Create a new highlighter instance.
  *
  * The highlighter manages a tree-sitter parser and a set of loaded languages.
@@ -149,6 +185,8 @@ export async function createHighlighter(
 
   const parser = new Parser();
   const languages = new Map<string, LoadedLanguage>();
+  const themes = new Map<string, BagraTheme>();
+
   let disposed = false;
 
   if (options.languages) {
@@ -162,6 +200,12 @@ export async function createHighlighter(
 
     for (const [name, lang] of loaded) {
       languages.set(name, lang);
+    }
+  }
+
+  if (options.themes) {
+    for (const theme of options.themes) {
+      themes.set(theme.name, theme);
     }
   }
 
@@ -211,12 +255,14 @@ export async function createHighlighter(
   return {
     codeToHtml(lang: string, code: string, options?: CodeOptions): string {
       const events = highlight(lang, code);
-      return renderHtml(events, code, options?.theme);
+      const theme = resolveTheme(options);
+      return renderHtml(events, code, theme);
     },
 
     codeToHast(lang: string, code: string, options?: CodeOptions): HastRoot {
       const events = highlight(lang, code);
-      return renderHast(events, code, options?.theme);
+      const theme = resolveTheme(options);
+      return renderHast(events, code, theme);
     },
 
     codeToTokens(lang: string, code: string): Token[][] {
@@ -242,6 +288,23 @@ export async function createHighlighter(
       return [...languages.keys()];
     },
 
+    loadTheme(theme: BagraTheme): void {
+      assertNotDisposed();
+      themes.set(theme.name, theme);
+    },
+
+    hasTheme(name: string): boolean {
+      return themes.has(name);
+    },
+
+    getThemes(): string[] {
+      return [...themes.keys()];
+    },
+
+    getLoadedThemes(): BagraTheme[] {
+      return [...themes.values()];
+    },
+
     dispose(): void {
       if (disposed) return;
       disposed = true;
@@ -251,6 +314,7 @@ export async function createHighlighter(
       }
 
       languages.clear();
+      themes.clear();
       parser.delete();
     },
   };

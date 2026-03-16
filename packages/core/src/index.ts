@@ -28,6 +28,8 @@
  * @module
  */
 export { createHighlighter } from './highlighter';
+export type { BagraTheme, Base16Scheme } from './theme';
+export { generateThemeCSS, generateThemeCSSWithMediaQuery } from './theme';
 export type {
   CodeOptions,
   HastElement,
