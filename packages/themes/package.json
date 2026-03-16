@@ -23,18 +23,16 @@
   "author": "Simeon Simeonoff",
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "development": "./src/index.ts",
-      "default": "./dist/index.js"
+    "./base16": {
+      "types": "./dist/base16/index.d.ts",
+      "development": "./src/base16/index.ts",
+      "default": "./dist/base16.js"
     },
-    "./css/*": {
-      "development": "./src/theme/*.css",
-      "default": "./dist/css/*.css"
+    "./base16/*": {
+      "development": "./src/base16/*.css",
+      "default": "./dist/base16/*.css"
     }
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],

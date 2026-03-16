@@ -29,8 +29,8 @@ const UPSTREAM_BRANCH = 'spec-0.11';
 const GITHUB_REPO = 'tinted-theming/schemes';
 
 const ROOT = join(import.meta.dirname, '..');
-const THEMES_DIR = join(ROOT, 'src', 'themes');
-const BARREL_PATH = join(ROOT, 'src', 'index.ts');
+const THEMES_DIR = join(ROOT, 'src', 'base16');
+const BARREL_PATH = join(ROOT, 'src', 'base16', 'index.ts');
 const UPSTREAM_REF_PATH = join(ROOT, '.upstream-ref');
 
 const BASE16_KEYS = [
@@ -207,7 +207,7 @@ function generateCssFile(theme: ParsedTheme): string {
 function generateBarrel(themes: ParsedTheme[]): string {
   const sorted = [...themes].sort((a, b) => a.slug.localeCompare(b.slug));
   const lines = sorted.map(
-    (t) => `export { ${t.identifier} } from './themes/${t.slug}';`,
+    (t) => `export { ${t.identifier} } from './${t.slug}';`,
   );
 
   lines.push('');
@@ -364,9 +364,9 @@ async function main(): Promise<void> {
   writeUpstreamRef(sha, themes.length);
 
   console.info(`\nGenerated ${themes.length} themes:`);
-  console.info(`  - ${themes.length} .ts files in src/themes/`);
-  console.info(`  - ${themes.length} .css files in src/themes/`);
-  console.info('  - src/index.ts barrel file');
+  console.info(`  - ${themes.length} .ts files in src/base16/`);
+  console.info(`  - ${themes.length} .css files in src/base16/`);
+  console.info('  - src/base16/index.ts barrel file');
   console.info(`\nUpstream ref: ${sha}`);
 }
 
