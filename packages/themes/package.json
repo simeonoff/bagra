@@ -38,7 +38,8 @@
   ],
   "scripts": {
     "build": "vite build",
-    "generate-themes": "tsx .scripts/generate-themes.ts"
+    "generate-themes": "tsx .scripts/generate-themes.ts",
+    "generate-themes:force": "npm run generate-themes -- --force"
   },
   "dependencies": {
     "@bagrajs/core": "^0.1.0"
