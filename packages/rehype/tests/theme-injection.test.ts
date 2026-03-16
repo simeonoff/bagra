@@ -44,6 +44,21 @@ describe('rehypeBagra (theme injection)', () => {
     expect(css).toContain('--base00: #2e3440;');
   });
 
+  it('does not set data-theme on <pre> when using media query approach', () => {
+    const hl = createMockHighlighter([AYU_LIGHT_THEME, NORD_THEME]);
+    const tree = createTree(createCodeBlock('$color: red;\n', 'scss'));
+
+    applyPlugin(tree, {
+      highlighter: hl,
+      themes: { light: 'ayu-light', dark: 'nord' },
+    });
+
+    const pre = tree.children[1] as Element;
+
+    expect(pre.tagName).toBe('pre');
+    expect(pre.properties.dataTheme).toBeUndefined();
+  });
+
   it('injects scoped CSS when themes has light/dark but defaultColor is set', () => {
     const hl = createMockHighlighter([AYU_LIGHT_THEME, NORD_THEME]);
     const tree = createTree(createCodeBlock('$color: red;\n', 'scss'));

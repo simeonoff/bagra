@@ -88,9 +88,14 @@ export function generateThemeStyles(
  */
 export function buildCodeOptions(options: RehypeBagraOptions): CodeOptions {
   if (options.themes) {
+    const useMediaQuery = shouldUseMediaQuery(
+      options.themes,
+      options.defaultColor,
+    );
+
     return {
       themes: options.themes,
-      defaultColor: options.defaultColor,
+      defaultColor: useMediaQuery ? false : options.defaultColor,
     };
   }
 
