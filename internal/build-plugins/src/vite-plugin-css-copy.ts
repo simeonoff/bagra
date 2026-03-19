@@ -1,25 +1,26 @@
-import { copyFileSync, mkdirSync, readdirSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { transformSync } from 'esbuild';
 import type { Plugin } from 'vite';
 
 interface CSSCopyOptions {
-  /**
-   * Destination path for the copied CSS files.
-   * Resolved relative to the package root (where vite.config.ts lives).
-   */
+  /** Source directory containing CSS files. */
   src: string;
+  /** Destination directory for copied files. */
   dest?: string;
+  /** Minify CSS output (default: true). */
+  minify?: boolean;
 }
 
 /**
- * Plugin that copies raw `*.css` file to `dest` after the
- * build, so it can be served as a static asset for browser-optimal loading.
+ * Plugin that copies `*.css` files to `dest` after the build,
+ * optionally minifying them via esbuild.
  */
 export default function CSSCopyPlugin(options: CSSCopyOptions): Plugin {
-  const { src, dest = 'dist/css/' } = options;
+  const { src, dest = 'dist/css/', minify = true } = options;
 
   return {
-    name: 'copy-css-themes',
+    name: 'copy-css',
     closeBundle() {
       const srcDir = resolve(src);
       const destDir = resolve(dest);
@@ -29,7 +30,12 @@ export default function CSSCopyPlugin(options: CSSCopyOptions): Plugin {
       for (const file of readdirSync(srcDir).filter((_file) =>
         _file.endsWith('.css'),
       )) {
-        copyFileSync(join(srcDir, file), join(destDir, file));
+        const content = readFileSync(join(srcDir, file), 'utf8');
+        const output = minify
+          ? transformSync(content, { loader: 'css', minify: true }).code
+          : content;
+
+        writeFileSync(join(destDir, file), output);
       }
     },
   };

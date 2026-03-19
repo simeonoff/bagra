@@ -40,7 +40,7 @@ describe('createHighlighter', () => {
 
     // Verify it actually works end-to-end
     const html = hl.codeToHtml('scss', '$x: 1;');
-    expect(html).toContain('bagra-variable');
+    expect(html).toContain('class="variable"');
   });
 
   it('creates a highlighter with highlights as { content }', async () => {
@@ -95,7 +95,7 @@ describe('createHighlighter', () => {
 
     expect(hl.hasLanguage('scss')).toBe(true);
     const html = hl.codeToHtml('scss', '$x: 1;');
-    expect(html).toContain('bagra-variable');
+    expect(html).toContain('class="variable"');
   });
 
   it('produces identical output with path vs { content }', async () => {
@@ -142,18 +142,18 @@ describe('codeToHtml', () => {
 
     expect(html).toMatch(/^<pre class="bagra"><code>.*<\/code><\/pre>$/);
     expect(html).toContain('<span class="line">');
-    expect(html).toContain('bagra-variable');
+    expect(html).toContain('class="variable"');
     expect(html).toContain('$color');
-    expect(html).toContain('bagra-punctuation-delimiter');
+    expect(html).toContain('class="punctuation"');
   });
 
   it('highlights a SCSS rule with selector and properties', () => {
     const code = '.container { color: red; }';
     const html = hl.codeToHtml('scss', code);
 
-    expect(html).toContain('bagra-type'); // class selector
+    expect(html).toContain('class="type"'); // class selector
     expect(html).toContain('container');
-    expect(html).toContain('bagra-punctuation-bracket'); // { }
+    expect(html).toContain('class="punctuation"'); // { }
   });
 
   it('preserves the original source text', () => {
@@ -304,7 +304,6 @@ describe('codeToHast', () => {
     const source = '$primary: blue;';
     const root = hl.codeToHast('scss', source);
 
-    // Collect all text from the HAST tree
     function collectText(nodes: any[]): string {
       let text = '';
       for (const node of nodes) {
@@ -334,18 +333,16 @@ describe('codeToHast', () => {
     expect(pre.properties).not.toHaveProperty('dataTheme');
   });
 
-  it('creates span elements with correct class names for highlights', () => {
+  it('creates span elements with bare capture class names (no prefix)', () => {
     const root = hl.codeToHast('scss', '$x: 1;');
     const pre = root.children[0] as HastElement;
     const code = pre.children[0] as HastElement;
 
-    // Find all highlight spans (not line spans) recursively
     function findHighlightSpans(nodes: any[]): HastElement[] {
       const spans: HastElement[] = [];
       for (const node of nodes) {
         if (node.type === 'element' && node.tagName === 'span') {
           const classes = node.properties.className as string[];
-          // Skip line spans
           if (!classes.includes('line')) {
             spans.push(node);
           }
@@ -358,11 +355,13 @@ describe('codeToHast', () => {
     const spans = findHighlightSpans(code.children);
     expect(spans.length).toBeGreaterThan(0);
 
-    // All highlight span class names should start with 'bagra-'
+    // Class names should be bare capture names — no 'bagra-' prefix
     for (const span of spans) {
       const classes = span.properties.className as string[];
       for (const cls of classes) {
-        expect(cls).toMatch(/^bagra-/);
+        expect(cls).not.toMatch(/^bagra-/);
+        // Should not contain dashes from old dot-to-dash conversion
+        expect(cls).not.toContain('-');
       }
     }
   });

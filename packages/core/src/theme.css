@@ -1,346 +1,350 @@
 /**
  * bagra — Capture-to-Base16 Mapping CSS
  *
- * This file maps all tree-sitter capture classes to Base16 color variables.
- * It uses a three-layer system:
+ * Maps all tree-sitter capture names to Base16 color scheme variables.
+ * Uses CSS nesting — all capture rules live inside `.bagra {}` so they
+ * are automatically scoped without a class prefix.
  *
- *   Layer 1 (Scheme):  --base00 through --base0F — 16 colors, user-provided
- *   Layer 2 (Mapping): .bagra-keyword { color: var(--bagra-keyword, var(--base0E)); }
- *   Layer 3 (Override): --bagra-keyword: hotpink;  — optional per-capture fine-tuning
+ * Two-layer system:
+ *
+ *   Layer 1 (Scheme):   --base00 through --base0F — provided by the active theme
+ *   Layer 2 (Mapping):  .bagra { .comment { color: var(--base03); } }
+ *
+ * Sub-capture variants use the data-capture attribute as a modifier:
+ *
+ *   <span class="comment" data-capture="error">...</span>
+ *
+ *   .bagra {
+ *     .comment { color: var(--base03); font-style: italic; }
+ *     .comment[data-capture^="error"] { color: var(--base08); font-weight: bold; }
+ *   }
+ *
+ * User overrides can target any selector directly:
+ *
+ *   .bagra .comment[data-capture="lua"] { color: darkblue; }
  *
  * Usage:
  *   1. Import this file: import '@bagrajs/core/theme.css';
- *   2. Define a scheme on .bagra[data-theme="..."] or :root
+ *   2. Define Base16 variables on .bagra[data-theme="..."] via generateThemeCSS()
  *   3. Set data-theme on <pre> via codeToHtml('lang', code, { theme: 'name' })
  *
- * @see https://github.com/tinted-theming/schemes — 250+ Base16 color schemes
+ * @see https://github.com/tinted-theming/schemes — 300+ Base16 color schemes
  */
 
-/* ---------------------------------------------------------------------------
- * Base element
- * ------------------------------------------------------------------------- */
-
 .bagra {
+  --font-family-mono:
+    ui-monospace, "Menlo", "Monaco", "Consolas", "Liberation Mono",
+    "Courier New", monospace;
+
+  font-family: var(--bagra-font-family, var(--font-family-mono));
+  font-size: var(--bagra-font-size, 0.875em);
+  line-height: var(--bagra-line-height, 1.7);
   background: var(--bagra-bg, var(--base00));
   color: var(--bagra-fg, var(--base05));
-}
-
-/* ---------------------------------------------------------------------------
- * Identifiers
- * ------------------------------------------------------------------------- */
-
-.bagra-variable {
-  color: var(--bagra-variable, var(--base05));
-}
-
-.bagra-variable-builtin {
-  color: var(--bagra-variable-builtin, var(--base05));
-  font-style: italic;
-}
-
-.bagra-variable-parameter {
-  color: var(--bagra-variable-parameter, var(--base05));
-}
-
-.bagra-variable-member {
-  color: var(--bagra-variable-member, var(--base05));
-}
-
-.bagra-constant {
-  color: var(--bagra-constant, var(--base09));
-}
-
-.bagra-constant-builtin {
-  color: var(--bagra-constant-builtin, var(--base09));
-}
-
-.bagra-module {
-  color: var(--bagra-module, var(--base08));
-}
-
-.bagra-label {
-  color: var(--bagra-label, var(--base0A));
-}
-
-/* ---------------------------------------------------------------------------
- * Literals
- * ------------------------------------------------------------------------- */
-
-.bagra-string {
-  color: var(--bagra-string, var(--base0B));
-}
-
-.bagra-string-documentation {
-  color: var(--bagra-string-documentation, var(--base0B));
-}
-
-.bagra-string-regexp {
-  color: var(--bagra-string-regexp, var(--base0B));
-}
-
-.bagra-string-escape {
-  color: var(--bagra-string-escape, var(--base0C));
-}
-
-.bagra-string-special {
-  color: var(--bagra-string-special, var(--base0B));
-}
-
-.bagra-string-special-symbol {
-  color: var(--bagra-string-special-symbol, var(--base0B));
-}
-
-.bagra-string-special-url {
-  color: var(--bagra-string-special-url, var(--base09));
-  text-decoration: underline;
-}
-
-.bagra-character {
-  color: var(--bagra-character, var(--base08));
-}
-
-.bagra-character-special {
-  color: var(--bagra-character-special, var(--base0F));
-}
-
-.bagra-boolean {
-  color: var(--bagra-boolean, var(--base09));
-}
-
-.bagra-number {
-  color: var(--bagra-number, var(--base09));
-}
-
-.bagra-number-float {
-  color: var(--bagra-number-float, var(--base09));
-}
-
-/* ---------------------------------------------------------------------------
- * Types
- * ------------------------------------------------------------------------- */
-
-.bagra-type {
-  color: var(--bagra-type, var(--base0A));
-}
-
-.bagra-type-builtin {
-  color: var(--bagra-type-builtin, var(--base0A));
-}
-
-.bagra-type-definition {
-  color: var(--bagra-type-definition, var(--base0A));
-}
-
-.bagra-constructor {
-  color: var(--bagra-constructor, var(--base0D));
-}
-
-.bagra-attribute {
-  color: var(--bagra-attribute, var(--base0A));
-}
-
-.bagra-property {
-  color: var(--bagra-property, var(--base05));
-}
-
-/* ---------------------------------------------------------------------------
- * Functions
- * ------------------------------------------------------------------------- */
-
-.bagra-function {
-  color: var(--bagra-function, var(--base0D));
-}
-
-.bagra-function-builtin {
-  color: var(--bagra-function-builtin, var(--base0D));
-}
-
-.bagra-function-call {
-  color: var(--bagra-function-call, var(--base0D));
-}
-
-.bagra-function-macro {
-  color: var(--bagra-function-macro, var(--base08));
-}
-
-.bagra-function-method {
-  color: var(--bagra-function-method, var(--base0D));
-}
-
-.bagra-function-method-call {
-  color: var(--bagra-function-method-call, var(--base0D));
-}
-
-/* ---------------------------------------------------------------------------
- * Keywords
- * ------------------------------------------------------------------------- */
-
-.bagra-keyword {
-  color: var(--bagra-keyword, var(--base0E));
-}
-
-.bagra-keyword-coroutine {
-  color: var(--bagra-keyword-coroutine, var(--base0E));
-}
-
-.bagra-keyword-function {
-  color: var(--bagra-keyword-function, var(--base0E));
-}
-
-.bagra-keyword-operator {
-  color: var(--bagra-keyword-operator, var(--base0E));
-}
-
-.bagra-keyword-import {
-  color: var(--bagra-keyword-import, var(--base0D));
-}
-
-.bagra-keyword-type {
-  color: var(--bagra-keyword-type, var(--base0E));
-}
-
-.bagra-keyword-modifier {
-  color: var(--bagra-keyword-modifier, var(--base0E));
-}
-
-.bagra-keyword-repeat {
-  color: var(--bagra-keyword-repeat, var(--base0E));
-}
-
-.bagra-keyword-return {
-  color: var(--bagra-keyword-return, var(--base0E));
-}
-
-.bagra-keyword-exception {
-  color: var(--bagra-keyword-exception, var(--base0E));
-}
-
-.bagra-keyword-conditional {
-  color: var(--bagra-keyword-conditional, var(--base0E));
-}
-
-.bagra-keyword-directive {
-  color: var(--bagra-keyword-directive, var(--base0E));
-}
-
-/* ---------------------------------------------------------------------------
- * Punctuation
- * ------------------------------------------------------------------------- */
-
-.bagra-punctuation-delimiter {
-  color: var(--bagra-punctuation-delimiter, var(--base0F));
-}
-
-.bagra-punctuation-bracket {
-  color: var(--bagra-punctuation-bracket, var(--base05));
-}
-
-.bagra-punctuation-special {
-  color: var(--bagra-punctuation-special, var(--base03));
-}
-
-/* ---------------------------------------------------------------------------
- * Comments
- * ------------------------------------------------------------------------- */
-
-.bagra-comment {
-  color: var(--bagra-comment, var(--base03));
-  font-style: italic;
-}
-
-.bagra-comment-documentation {
-  color: var(--bagra-comment-documentation, var(--base03));
-  font-style: italic;
-}
-
-/* ---------------------------------------------------------------------------
- * Tags (HTML/XML)
- * ------------------------------------------------------------------------- */
-
-.bagra-tag {
-  color: var(--bagra-tag, var(--base08));
-}
-
-.bagra-tag-builtin {
-  color: var(--bagra-tag-builtin, var(--base08));
-}
-
-.bagra-tag-attribute {
-  color: var(--bagra-tag-attribute, var(--base0A));
-}
-
-.bagra-tag-delimiter {
-  color: var(--bagra-tag-delimiter, var(--base0F));
-}
-
-/* ---------------------------------------------------------------------------
- * Operators
- * ------------------------------------------------------------------------- */
-
-.bagra-operator {
-  color: var(--bagra-operator, var(--base05));
-}
-
-/* ---------------------------------------------------------------------------
- * Diff
- * ------------------------------------------------------------------------- */
-
-.bagra-diff-plus {
-  color: var(--bagra-diff-plus, var(--base0B));
-}
-
-.bagra-diff-minus {
-  color: var(--bagra-diff-minus, var(--base08));
-}
-
-.bagra-diff-delta {
-  color: var(--bagra-diff-delta, var(--base09));
-}
-
-/* ---------------------------------------------------------------------------
- * Markup
- * ------------------------------------------------------------------------- */
-
-.bagra-markup-heading {
-  color: var(--bagra-markup-heading, var(--base0D));
-  font-weight: bold;
-}
-
-.bagra-markup-bold {
-  font-weight: bold;
-}
-
-.bagra-markup-italic {
-  font-style: italic;
-}
-
-.bagra-markup-link {
-  color: var(--bagra-markup-link, var(--base09));
-  text-decoration: underline;
-}
-
-.bagra-markup-link-url {
-  color: var(--bagra-markup-link-url, var(--base09));
-  text-decoration: underline;
-}
-
-.bagra-markup-raw {
-  color: var(--bagra-markup-raw, var(--base09));
-}
-
-.bagra-markup-raw-block {
-  color: var(--bagra-markup-raw-block, var(--base09));
-}
-
-.bagra-markup-quote {
-  color: var(--bagra-markup-quote, var(--base03));
-  font-style: italic;
-}
-
-.bagra-markup-list {
-  color: var(--bagra-markup-list, var(--base0A));
-}
-
-.bagra-markup-strikethrough {
-  text-decoration: line-through;
+  padding: 20px 0;
+  overflow-x: auto;
+  text-align: left;
+
+  code {
+    display: block;
+    counter-reset: line;
+    padding: 0 20px;
+    width: fit-content;
+  }
+
+  .line {
+    counter-increment: line;
+
+    &::before {
+      content: counter(line);
+      display: inline-block;
+      width: 2em;
+      margin-right: 1em;
+      text-align: right;
+      color: var(--bagra-line-number, var(--base03));
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+   * Identifiers
+   * ----------------------------------------------------------------------- */
+
+  .variable {
+    color: var(--base05);
+
+    &[data-capture^="builtin"] {
+      font-style: italic;
+    }
+
+    &[data-capture^="parameter.builtin"] {
+      color: var(--base0C);
+      font-style: italic;
+    }
+  }
+
+  .constant {
+    color: var(--base09);
+
+    &[data-capture^="macro"] {
+      color: var(--base08);
+    }
+  }
+
+  .module {
+    color: var(--base08);
+
+    &[data-capture^="builtin"] {
+      color: var(--base0C);
+    }
+  }
+
+  .label {
+    color: var(--base0A);
+  }
+
+  /* -------------------------------------------------------------------------
+   * Literals
+   * ----------------------------------------------------------------------- */
+
+  .string {
+    color: var(--base0B);
+
+    &[data-capture^="escape"] {
+      color: var(--base0C);
+    }
+
+    &[data-capture^="special.path"] {
+      color: var(--base0C);
+    }
+
+    &[data-capture^="special.url"] {
+      color: var(--base09);
+      text-decoration: underline;
+    }
+  }
+
+  .character {
+    color: var(--base08);
+
+    &[data-capture^="special"] {
+      color: var(--base0F);
+    }
+  }
+
+  .boolean {
+    color: var(--base09);
+  }
+
+  .number {
+    color: var(--base09);
+  }
+
+  /* -------------------------------------------------------------------------
+   * Types
+   * ----------------------------------------------------------------------- */
+
+  .type {
+    color: var(--base0A);
+  }
+
+  .constructor {
+    color: var(--base0D);
+  }
+
+  .attribute {
+    color: var(--base0A);
+
+    &[data-capture^="builtin"] {
+      color: var(--base0C);
+    }
+  }
+
+  .property {
+    color: var(--base05);
+  }
+
+  /* -------------------------------------------------------------------------
+   * Functions
+   * ----------------------------------------------------------------------- */
+
+  .function {
+    color: var(--base0D);
+
+    &[data-capture^="macro"] {
+      color: var(--base08);
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+   * Keywords
+   * ----------------------------------------------------------------------- */
+
+  .keyword {
+    color: var(--base0E);
+
+    &[data-capture^="import"] {
+      color: var(--base0D);
+    }
+
+    &[data-capture^="debug"] {
+      color: var(--base0C);
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+   * Punctuation
+   * ----------------------------------------------------------------------- */
+
+  .punctuation {
+    color: var(--base0F);
+
+    &[data-capture^="bracket"] {
+      color: var(--base05);
+    }
+
+    &[data-capture^="special"] {
+      color: var(--base0F);
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+   * Comments
+   * ----------------------------------------------------------------------- */
+
+  .comment {
+    color: var(--base03);
+    font-style: italic;
+
+    &[data-capture^="error"] {
+      color: var(--base08);
+      font-style: normal;
+      font-weight: bold;
+    }
+
+    &[data-capture^="warning"] {
+      color: var(--base09);
+      font-style: normal;
+      font-weight: bold;
+    }
+
+    &[data-capture^="todo"] {
+      color: var(--base0A);
+      font-style: normal;
+      font-weight: bold;
+    }
+
+    &[data-capture^="note"] {
+      color: var(--base0C);
+      font-style: normal;
+      font-weight: bold;
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+   * Tags (HTML/XML)
+   * ----------------------------------------------------------------------- */
+
+  .tag {
+    color: var(--base08);
+
+    &[data-capture^="attribute"] {
+      color: var(--base0A);
+    }
+
+    &[data-capture^="delimiter"] {
+      color: var(--base0F);
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+   * Operators
+   * ----------------------------------------------------------------------- */
+
+  .operator {
+    color: var(--base05);
+  }
+
+  /* -------------------------------------------------------------------------
+   * Diff
+   * ----------------------------------------------------------------------- */
+
+  .diff {
+    &[data-capture^="plus"] {
+      color: var(--base0B);
+    }
+
+    &[data-capture^="minus"] {
+      color: var(--base08);
+    }
+
+    &[data-capture^="delta"] {
+      color: var(--base09);
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+   * Markup
+   * ----------------------------------------------------------------------- */
+
+  .markup {
+    &[data-capture^="heading"] {
+      color: var(--base0D);
+      font-weight: bold;
+    }
+
+    &[data-capture^="strong"] {
+      font-weight: bold;
+    }
+
+    &[data-capture^="italic"] {
+      font-style: italic;
+    }
+
+    &[data-capture^="underline"] {
+      text-decoration: underline;
+    }
+
+    &[data-capture^="strikethrough"] {
+      text-decoration: line-through;
+    }
+
+    &[data-capture^="math"] {
+      color: var(--base09);
+    }
+
+    &[data-capture^="link"] {
+      color: var(--base09);
+      text-decoration: underline;
+    }
+
+    &[data-capture^="link.label"] {
+      text-decoration: none;
+    }
+
+    &[data-capture^="link.url"] {
+      color: var(--base09);
+      text-decoration: underline;
+    }
+
+    &[data-capture^="raw"] {
+      color: var(--base09);
+    }
+
+    &[data-capture^="quote"] {
+      color: var(--base03);
+      font-style: italic;
+    }
+
+    &[data-capture^="list"] {
+      color: var(--base0A);
+    }
+
+    &[data-capture^="list.checked"] {
+      color: var(--base0B);
+    }
+
+    &[data-capture^="list.unchecked"] {
+      color: var(--base03);
+    }
+  }
 }

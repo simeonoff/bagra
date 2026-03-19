@@ -1,5 +1,6 @@
-import { copyFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { transformSync } from 'esbuild';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 
@@ -32,11 +33,16 @@ export default defineConfig({
     {
       name: 'copy-theme-css',
       closeBundle() {
-        // Copy theme.css to dist/ so it can be imported as a static CSS file
-        copyFileSync(
+        const content = readFileSync(
           resolve(__dirname, 'src/theme.css'),
-          resolve(__dirname, 'dist/theme.css'),
+          'utf8',
         );
+        const minified = transformSync(content, {
+          loader: 'css',
+          minify: true,
+        }).code;
+
+        writeFileSync(resolve(__dirname, 'dist/theme.css'), minified);
       },
     },
   ],

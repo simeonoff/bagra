@@ -1,5 +1,5 @@
 import type { HighlightEvent } from '../types';
-import { captureNameToClass } from '../utils';
+import { captureToSpanAttrs } from '../utils';
 
 /**
  * Escape special HTML characters in source text.
@@ -52,9 +52,14 @@ export function renderHtml(
       case 'line-end':
         parts.push('</span>');
         break;
-      case 'start':
-        parts.push(`<span class="${captureNameToClass(event.captureName)}">`);
+      case 'start': {
+        const attrs = captureToSpanAttrs(event.captureName);
+        const dataCapture = attrs.dataCapture
+          ? ` data-capture="${escapeHtml(attrs.dataCapture)}"`
+          : '';
+        parts.push(`<span class="${attrs.class}"${dataCapture}>`);
         break;
+      }
       case 'end':
         parts.push('</span>');
         break;
