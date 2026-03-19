@@ -24,7 +24,7 @@
  *   .bagra .comment[data-capture="lua"] { color: darkblue; }
  *
  * Usage:
- *   1. Import this file: import '@bagrajs/core/theme.css';
+ *   1. Import this file: import '@bagrajs/core/styles.css';
  *   2. Define Base16 variables on .bagra[data-theme="..."] via generateThemeCSS()
  *   3. Set data-theme on <pre> via codeToHtml('lang', code, { theme: 'name' })
  *

@@ -17,11 +17,11 @@ export default defineConfig({
   plugins: [
     dts({ rollupTypes: false }),
     {
-      name: 'copy-core-theme-css',
+      name: 'copy-core-styles-css',
       closeBundle() {
         copyFileSync(
-          resolve(__dirname, '../core/dist/theme.css'),
-          resolve(__dirname, 'dist/theme.css'),
+          resolve(__dirname, '../core/dist/styles.css'),
+          resolve(__dirname, 'dist/styles.css'),
         );
       },
     },

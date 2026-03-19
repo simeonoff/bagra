@@ -32,7 +32,7 @@
       "development": "./src/index.ts",
       "default": "./dist/index.js"
     },
-    "./theme.css": "./dist/theme.css"
+    "./styles.css": "./dist/styles.css"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

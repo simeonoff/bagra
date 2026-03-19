@@ -31,10 +31,10 @@ export default defineConfig({
   plugins: [
     dts({ rollupTypes: false }),
     {
-      name: 'copy-theme-css',
+      name: 'copy-styles-css',
       closeBundle() {
         const content = readFileSync(
-          resolve(__dirname, 'src/theme.css'),
+          resolve(__dirname, 'src/styles.css'),
           'utf8',
         );
         const minified = transformSync(content, {
@@ -42,7 +42,7 @@ export default defineConfig({
           minify: true,
         }).code;
 
-        writeFileSync(resolve(__dirname, 'dist/theme.css'), minified);
+        writeFileSync(resolve(__dirname, 'dist/styles.css'), minified);
       },
     },
   ],
