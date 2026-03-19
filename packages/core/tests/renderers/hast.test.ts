@@ -58,7 +58,7 @@ describe('renderHast', () => {
     expect((lineChildren[0] as HastText).value).toBe('hello');
   });
 
-  it('renders a highlighted token as a span element inside a line', () => {
+  it('renders a single-segment capture with className only, no dataCapture', () => {
     const events: HighlightEvent[] = [
       { type: 'line-start' },
       { type: 'start', captureName: 'keyword' },
@@ -74,13 +74,44 @@ describe('renderHast', () => {
     const span = lineChildren[0] as HastElement;
     expect(span.type).toBe('element');
     expect(span.tagName).toBe('span');
-    expect(span.properties.className).toEqual(['bagra-keyword']);
-    expect(span.children).toHaveLength(1);
+    expect(span.properties.className).toEqual(['keyword']);
+    expect(span.properties).not.toHaveProperty('dataCapture');
     expect((span.children[0] as HastText).value).toBe('let');
   });
 
+  it('renders a sub-capture with className and dataCapture property', () => {
+    const events: HighlightEvent[] = [
+      { type: 'line-start' },
+      { type: 'start', captureName: 'keyword.import' },
+      { type: 'source', start: 0, end: 6 },
+      { type: 'end' },
+      { type: 'line-end' },
+    ];
+
+    const lineChildren = getFirstLineChildren(renderHast(events, 'import'));
+    const span = lineChildren[0] as HastElement;
+
+    expect(span.properties.className).toEqual(['keyword']);
+    expect(span.properties.dataCapture).toBe('import');
+  });
+
+  it('preserves the full suffix in dataCapture for deep captures', () => {
+    const events: HighlightEvent[] = [
+      { type: 'line-start' },
+      { type: 'start', captureName: 'comment.documentation.java' },
+      { type: 'source', start: 0, end: 3 },
+      { type: 'end' },
+      { type: 'line-end' },
+    ];
+
+    const lineChildren = getFirstLineChildren(renderHast(events, '/**'));
+    const span = lineChildren[0] as HastElement;
+
+    expect(span.properties.className).toEqual(['comment']);
+    expect(span.properties.dataCapture).toBe('documentation.java');
+  });
+
   it('renders nested highlights as nested span elements', () => {
-    // 16px: number wraps "16", type wraps "px" inside number
     const events: HighlightEvent[] = [
       { type: 'line-start' },
       { type: 'start', captureName: 'number' },
@@ -96,16 +127,14 @@ describe('renderHast', () => {
     expect(lineChildren).toHaveLength(1);
 
     const numberSpan = lineChildren[0] as HastElement;
-    expect(numberSpan.properties.className).toEqual(['bagra-number']);
+    expect(numberSpan.properties.className).toEqual(['number']);
     expect(numberSpan.children).toHaveLength(2);
 
-    // "16" text
     expect((numberSpan.children[0] as HastText).value).toBe('16');
 
-    // nested "px" span
     const typeSpan = numberSpan.children[1] as HastElement;
     expect(typeSpan.tagName).toBe('span');
-    expect(typeSpan.properties.className).toEqual(['bagra-type']);
+    expect(typeSpan.properties.className).toEqual(['type']);
     expect((typeSpan.children[0] as HastText).value).toBe('px');
   });
 
@@ -118,18 +147,16 @@ describe('renderHast', () => {
     ];
 
     const lineChildren = getFirstLineChildren(renderHast(events, source));
-    // HAST text nodes contain raw text — escaping happens at serialization
     expect((lineChildren[0] as HastText).value).toBe('<div>&</div>');
   });
 
   it('renders mixed highlighted and plain text in a line', () => {
-    // "$x: 1"
     const events: HighlightEvent[] = [
       { type: 'line-start' },
       { type: 'start', captureName: 'variable' },
       { type: 'source', start: 0, end: 2 },
       { type: 'end' },
-      { type: 'source', start: 2, end: 4 }, // ": "
+      { type: 'source', start: 2, end: 4 },
       { type: 'start', captureName: 'number' },
       { type: 'source', start: 4, end: 5 },
       { type: 'end' },
@@ -139,13 +166,12 @@ describe('renderHast', () => {
     const lineChildren = getFirstLineChildren(renderHast(events, '$x: 1'));
 
     expect(lineChildren).toHaveLength(3);
-    expect((lineChildren[0] as HastElement).tagName).toBe('span'); // $x
-    expect((lineChildren[1] as HastText).value).toBe(': '); // plain text
-    expect((lineChildren[2] as HastElement).tagName).toBe('span'); // 1
+    expect((lineChildren[0] as HastElement).tagName).toBe('span');
+    expect((lineChildren[1] as HastText).value).toBe(': ');
+    expect((lineChildren[2] as HastElement).tagName).toBe('span');
   });
 
   it('renders multi-line output with \\n text nodes between line spans', () => {
-    // Source: "ab\ncd"
     const source = 'ab\ncd';
     const events: HighlightEvent[] = [
       { type: 'line-start' },
@@ -159,7 +185,6 @@ describe('renderHast', () => {
     const root = renderHast(events, source);
     const codeChildren = getCodeChildren(root);
 
-    // Should have: span.line, text("\n"), span.line
     expect(codeChildren).toHaveLength(3);
 
     const line1 = codeChildren[0] as HastElement;
@@ -204,7 +229,6 @@ describe('renderHast', () => {
   });
 
   it('renders empty lines as empty span.line elements', () => {
-    // Source: "a\n\nb"
     const source = 'a\n\nb';
     const events: HighlightEvent[] = [
       { type: 'line-start' },
@@ -220,7 +244,6 @@ describe('renderHast', () => {
     const root = renderHast(events, source);
     const codeChildren = getCodeChildren(root);
 
-    // span.line("a"), "\n", span.line(), "\n", span.line("b")
     expect(codeChildren).toHaveLength(5);
 
     const emptyLine = codeChildren[2] as HastElement;

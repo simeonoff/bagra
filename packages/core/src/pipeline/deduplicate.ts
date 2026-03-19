@@ -10,7 +10,7 @@ import type { QueryCapture } from 'web-tree-sitter';
  *
  * For example, in a highlights.scm:
  * ```scheme
- * (identifier) @variable                              ; general, pattern 0
+ * (identifier) @variable                               ; general, pattern 0
  * (function_declaration name: (identifier) @function)  ; specific, pattern 1
  * ```
  *
@@ -25,27 +25,19 @@ import type { QueryCapture } from 'web-tree-sitter';
  * @returns A new list of captures with duplicates removed, preserving the last match for each node.
  */
 export function deduplicateCaptures(captures: QueryCapture[]): QueryCapture[] {
-  if (captures.length === 0) return captures;
+  const byNode = new Map<number, QueryCapture>();
 
-  const result: QueryCapture[] = [];
+  for (const capture of captures) {
+    const existing = byNode.get(capture.node.id);
 
-  for (let i = 0; i < captures.length; i++) {
-    const current = captures[i];
-    const next = captures[i + 1];
-
-    // If the next capture matches the exact same node, skip the current one.
-    // The later pattern (higher patternIndex) takes precedence.
-    if (
-      next &&
-      next.node.id === current.node.id &&
-      next.node.startIndex === current.node.startIndex &&
-      next.node.endIndex === current.node.endIndex
-    ) {
-      continue;
+    if (!existing || capture.patternIndex > existing.patternIndex) {
+      byNode.set(capture.node.id, capture);
     }
-
-    result.push(current);
   }
 
-  return result;
+  return Array.from(byNode.values()).sort(
+    (a, b) =>
+      a.node.startIndex - b.node.startIndex ||
+      a.node.endIndex - b.node.endIndex,
+  );
 }

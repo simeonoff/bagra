@@ -1,0 +1,350 @@
+/**
+ * bagra — Capture-to-Base16 Mapping CSS
+ *
+ * Maps all tree-sitter capture names to Base16 color scheme variables.
+ * Uses CSS nesting — all capture rules live inside `.bagra {}` so they
+ * are automatically scoped without a class prefix.
+ *
+ * Two-layer system:
+ *
+ *   Layer 1 (Scheme):   --base00 through --base0F — provided by the active theme
+ *   Layer 2 (Mapping):  .bagra { .comment { color: var(--base03); } }
+ *
+ * Sub-capture variants use the data-capture attribute as a modifier:
+ *
+ *   <span class="comment" data-capture="error">...</span>
+ *
+ *   .bagra {
+ *     .comment { color: var(--base03); font-style: italic; }
+ *     .comment[data-capture^="error"] { color: var(--base08); font-weight: bold; }
+ *   }
+ *
+ * User overrides can target any selector directly:
+ *
+ *   .bagra .comment[data-capture="lua"] { color: darkblue; }
+ *
+ * Usage:
+ *   1. Import this file: import '@bagrajs/core/styles.css';
+ *   2. Define Base16 variables on .bagra[data-theme="..."] via generateThemeCSS()
+ *   3. Set data-theme on <pre> via codeToHtml('lang', code, { theme: 'name' })
+ *
+ * @see https://github.com/tinted-theming/schemes — 300+ Base16 color schemes
+ */
+
+.bagra {
+  --font-family-mono:
+    ui-monospace, "Menlo", "Monaco", "Consolas", "Liberation Mono",
+    "Courier New", monospace;
+
+  font-family: var(--bagra-font-family, var(--font-family-mono));
+  font-size: var(--bagra-font-size, 0.875em);
+  line-height: var(--bagra-line-height, 1.7);
+  background: var(--bagra-bg, var(--base00));
+  color: var(--bagra-fg, var(--base05));
+  padding: 20px 0;
+  overflow-x: auto;
+  text-align: left;
+
+  code {
+    display: block;
+    counter-reset: line;
+    padding: 0 20px;
+    width: fit-content;
+  }
+
+  .line {
+    counter-increment: line;
+
+    &::before {
+      content: counter(line);
+      display: inline-block;
+      width: 2em;
+      margin-right: 1em;
+      text-align: right;
+      color: var(--bagra-line-number, var(--base03));
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+   * Identifiers
+   * ----------------------------------------------------------------------- */
+
+  .variable {
+    color: var(--base05);
+
+    &[data-capture^="builtin"] {
+      font-style: italic;
+    }
+
+    &[data-capture^="parameter.builtin"] {
+      color: var(--base0C);
+      font-style: italic;
+    }
+  }
+
+  .constant {
+    color: var(--base09);
+
+    &[data-capture^="macro"] {
+      color: var(--base08);
+    }
+  }
+
+  .module {
+    color: var(--base08);
+
+    &[data-capture^="builtin"] {
+      color: var(--base0C);
+    }
+  }
+
+  .label {
+    color: var(--base0A);
+  }
+
+  /* -------------------------------------------------------------------------
+   * Literals
+   * ----------------------------------------------------------------------- */
+
+  .string {
+    color: var(--base0B);
+
+    &[data-capture^="escape"] {
+      color: var(--base0C);
+    }
+
+    &[data-capture^="special.path"] {
+      color: var(--base0C);
+    }
+
+    &[data-capture^="special.url"] {
+      color: var(--base09);
+      text-decoration: underline;
+    }
+  }
+
+  .character {
+    color: var(--base08);
+
+    &[data-capture^="special"] {
+      color: var(--base0F);
+    }
+  }
+
+  .boolean {
+    color: var(--base09);
+  }
+
+  .number {
+    color: var(--base09);
+  }
+
+  /* -------------------------------------------------------------------------
+   * Types
+   * ----------------------------------------------------------------------- */
+
+  .type {
+    color: var(--base0A);
+  }
+
+  .constructor {
+    color: var(--base0D);
+  }
+
+  .attribute {
+    color: var(--base0A);
+
+    &[data-capture^="builtin"] {
+      color: var(--base0C);
+    }
+  }
+
+  .property {
+    color: var(--base05);
+  }
+
+  /* -------------------------------------------------------------------------
+   * Functions
+   * ----------------------------------------------------------------------- */
+
+  .function {
+    color: var(--base0D);
+
+    &[data-capture^="macro"] {
+      color: var(--base08);
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+   * Keywords
+   * ----------------------------------------------------------------------- */
+
+  .keyword {
+    color: var(--base0E);
+
+    &[data-capture^="import"] {
+      color: var(--base0D);
+    }
+
+    &[data-capture^="debug"] {
+      color: var(--base0C);
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+   * Punctuation
+   * ----------------------------------------------------------------------- */
+
+  .punctuation {
+    color: var(--base0F);
+
+    &[data-capture^="bracket"] {
+      color: var(--base05);
+    }
+
+    &[data-capture^="special"] {
+      color: var(--base0F);
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+   * Comments
+   * ----------------------------------------------------------------------- */
+
+  .comment {
+    color: var(--base03);
+    font-style: italic;
+
+    &[data-capture^="error"] {
+      color: var(--base08);
+      font-style: normal;
+      font-weight: bold;
+    }
+
+    &[data-capture^="warning"] {
+      color: var(--base09);
+      font-style: normal;
+      font-weight: bold;
+    }
+
+    &[data-capture^="todo"] {
+      color: var(--base0A);
+      font-style: normal;
+      font-weight: bold;
+    }
+
+    &[data-capture^="note"] {
+      color: var(--base0C);
+      font-style: normal;
+      font-weight: bold;
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+   * Tags (HTML/XML)
+   * ----------------------------------------------------------------------- */
+
+  .tag {
+    color: var(--base08);
+
+    &[data-capture^="attribute"] {
+      color: var(--base0A);
+    }
+
+    &[data-capture^="delimiter"] {
+      color: var(--base0F);
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+   * Operators
+   * ----------------------------------------------------------------------- */
+
+  .operator {
+    color: var(--base05);
+  }
+
+  /* -------------------------------------------------------------------------
+   * Diff
+   * ----------------------------------------------------------------------- */
+
+  .diff {
+    &[data-capture^="plus"] {
+      color: var(--base0B);
+    }
+
+    &[data-capture^="minus"] {
+      color: var(--base08);
+    }
+
+    &[data-capture^="delta"] {
+      color: var(--base09);
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+   * Markup
+   * ----------------------------------------------------------------------- */
+
+  .markup {
+    &[data-capture^="heading"] {
+      color: var(--base0D);
+      font-weight: bold;
+    }
+
+    &[data-capture^="strong"] {
+      font-weight: bold;
+    }
+
+    &[data-capture^="italic"] {
+      font-style: italic;
+    }
+
+    &[data-capture^="underline"] {
+      text-decoration: underline;
+    }
+
+    &[data-capture^="strikethrough"] {
+      text-decoration: line-through;
+    }
+
+    &[data-capture^="math"] {
+      color: var(--base09);
+    }
+
+    &[data-capture^="link"] {
+      color: var(--base09);
+      text-decoration: underline;
+    }
+
+    &[data-capture^="link.label"] {
+      text-decoration: none;
+    }
+
+    &[data-capture^="link.url"] {
+      color: var(--base09);
+      text-decoration: underline;
+    }
+
+    &[data-capture^="raw"] {
+      color: var(--base09);
+    }
+
+    &[data-capture^="quote"] {
+      color: var(--base03);
+      font-style: italic;
+    }
+
+    &[data-capture^="list"] {
+      color: var(--base0A);
+    }
+
+    &[data-capture^="list.checked"] {
+      color: var(--base0B);
+    }
+
+    &[data-capture^="list.unchecked"] {
+      color: var(--base03);
+    }
+  }
+}
