@@ -1,5 +1,5 @@
 import type { HastElement, HastNode, HastRoot, HighlightEvent } from '../types';
-import { captureNameToClass } from '../utils';
+import { captureToSpanAttrs } from '../utils';
 
 /**
  * Render a highlight event stream into a HAST (Hypertext Abstract Syntax Tree).
@@ -65,10 +65,20 @@ export function renderHast(
 
       case 'start': {
         const current = stack[stack.length - 1];
+        const attrs = captureToSpanAttrs(event.captureName);
+
+        const properties: HastElement['properties'] = {
+          className: [attrs.class],
+        };
+
+        if (attrs.dataCapture) {
+          properties.dataCapture = attrs.dataCapture;
+        }
+
         const span: HastElement = {
           type: 'element',
           tagName: 'span',
-          properties: { className: [captureNameToClass(event.captureName)] },
+          properties,
           children: [],
         };
         current.push(span);

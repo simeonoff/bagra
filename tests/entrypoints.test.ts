@@ -18,7 +18,7 @@ describe('web entry point (@bagrajs/web)', () => {
     });
 
     const html = hl.codeToHtml('scss', '$x: 1;');
-    expect(html).toContain('bagra-variable');
+    expect(html).toContain('class="variable"');
     expect(html).toContain('$x');
 
     hl.dispose();
@@ -47,7 +47,7 @@ describe('core entry point (@bagrajs/core)', () => {
     });
 
     const html = hl.codeToHtml('scss', '$x: 1;');
-    expect(html).toContain('bagra-variable');
+    expect(html).toContain('class="variable"');
 
     hl.dispose();
   });
@@ -68,7 +68,7 @@ describe('core entry point (@bagrajs/core)', () => {
     });
 
     const html = hl.codeToHtml('scss', '$x: 1;');
-    expect(html).toContain('bagra-variable');
+    expect(html).toContain('class="variable"');
 
     hl.dispose();
   });
@@ -98,7 +98,7 @@ describe('wasm entry point (@bagrajs/wasm)', () => {
     });
 
     const html = hl.codeToHtml('scss', '$x: 1;');
-    expect(html).toContain('bagra-variable');
+    expect(html).toContain('class="variable"');
 
     hl.dispose();
   });

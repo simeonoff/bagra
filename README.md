@@ -6,11 +6,14 @@ Syntax highlighting for the web using tree-sitter WASM grammars. Uses the actual
 
 ## Packages
 
-- `@bagra/core` — core highlighter (bring your own WASM binary)
-- `@bagra/web` — batteries-included entry point with inlined WASM
-- `@bagra/wasm` — inlined `web-tree-sitter` binary
-- `@bagra/markdown-it` — markdown-it plugin (not yet implemented)
-- `@bagra/rehype` — rehype plugin (not yet implemented)
+| Package                                        | Description                                      | Status    |
+|------------------------------------------------|--------------------------------------------------|-----------|
+| [`@bagrajs/core`](packages/core)               | Core highlighter (bring your own WASM binary)    | Available |
+| [`@bagrajs/web`](packages/web)                 | Batteries-included entry point with inlined WASM | Available |
+| [`@bagrajs/wasm`](packages/wasm)               | Inlined `web-tree-sitter` binary                 | Available |
+| [`@bagrajs/themes`](packages/themes)           | 300+ Base16 color schemes (JS + CSS)             | Available |
+| [`@bagrajs/rehype`](packages/rehype)           | rehype plugin for unified/Astro pipelines        | Available |
+| [`@bagrajs/markdown-it`](packages/markdown-it) | markdown-it plugin for VitePress                 | Planned   |
 
 ## License
 

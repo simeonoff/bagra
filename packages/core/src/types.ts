@@ -197,7 +197,7 @@ export interface Highlighter {
    * Import the mapping CSS to apply theme colors:
    *
    * ```ts
-   * import '@bagrajs/core/theme.css';
+   * import '@bagrajs/core/styles.css';
    * ```
    *
    * @param lang - The language name (e.g. 'javascript')

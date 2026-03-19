@@ -26,9 +26,9 @@
       "development": "./src/index.ts",
       "default": "./dist/index.js"
     },
-    "./theme.css": {
-      "development": "./src/theme.css",
-      "default": "./dist/theme.css"
+    "./styles.css": {
+      "development": "./src/styles.css",
+      "default": "./dist/styles.css"
     },
     "./theme": {
       "types": "./dist/theme.d.ts",
