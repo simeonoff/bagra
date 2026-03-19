@@ -1,8 +1,8 @@
 # bagra
 
-Syntax highlighting for the web using tree-sitter WASM grammars. Uses the actual parser grammar for tokenization instead of regex approximations.
+Parser-accurate syntax highlighting for the web, powered by tree-sitter WASM grammars. Uses the actual parser grammar for tokenization instead of regex approximations.
 
-> This project is in early development. APIs will change.
+> This project is in early development. APIs may change.
 
 ## Packages
 
