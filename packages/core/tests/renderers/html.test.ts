@@ -1,27 +1,37 @@
 import { describe, expect, it } from 'vitest';
 import { renderHtml } from '../../src/renderers/html';
 import type { HighlightEvent } from '../../src/types';
-import { captureNameToClass } from '../../src/utils';
+import { captureToSpanAttrs } from '../../src/utils';
 
-describe('captureNameToClass', () => {
-  it('prefixes a simple name with bagra-', () => {
-    expect(captureNameToClass('keyword')).toBe('bagra-keyword');
+describe('captureToSpanAttrs', () => {
+  it('returns only class for a single-segment capture', () => {
+    expect(captureToSpanAttrs('keyword')).toEqual({ class: 'keyword' });
   });
 
-  it('replaces dots with dashes', () => {
-    expect(captureNameToClass('keyword.function')).toBe(
-      'bagra-keyword-function',
-    );
+  it('splits on the first dot into class and dataCapture', () => {
+    expect(captureToSpanAttrs('keyword.function')).toEqual({
+      class: 'keyword',
+      dataCapture: 'function',
+    });
   });
 
-  it('handles deeply nested names', () => {
-    expect(captureNameToClass('string.special.url')).toBe(
-      'bagra-string-special-url',
-    );
+  it('preserves remaining dots in dataCapture', () => {
+    expect(captureToSpanAttrs('comment.documentation.java')).toEqual({
+      class: 'comment',
+      dataCapture: 'documentation.java',
+    });
   });
 
-  it('handles single-character names', () => {
-    expect(captureNameToClass('x')).toBe('bagra-x');
+  it('handles deeply nested captures', () => {
+    expect(captureToSpanAttrs('string.special.url')).toEqual({
+      class: 'string',
+      dataCapture: 'special.url',
+    });
+  });
+
+  it('does not set dataCapture for single-segment names', () => {
+    const attrs = captureToSpanAttrs('variable');
+    expect(attrs.dataCapture).toBeUndefined();
   });
 });
 
@@ -49,7 +59,7 @@ describe('renderHtml', () => {
     );
   });
 
-  it('renders a single highlighted span inside a line', () => {
+  it('renders a single-segment capture with class only, no data-capture', () => {
     const events: HighlightEvent[] = [
       { type: 'line-start' },
       { type: 'start', captureName: 'keyword' },
@@ -60,9 +70,39 @@ describe('renderHtml', () => {
     const html = renderHtml(events, 'let');
     expect(html).toBe(
       '<pre class="bagra"><code>' +
-        '<span class="line"><span class="bagra-keyword">let</span></span>' +
+        '<span class="line"><span class="keyword">let</span></span>' +
         '</code></pre>',
     );
+    expect(html).not.toContain('data-capture');
+  });
+
+  it('renders a sub-capture with class and data-capture attribute', () => {
+    const events: HighlightEvent[] = [
+      { type: 'line-start' },
+      { type: 'start', captureName: 'keyword.import' },
+      { type: 'source', start: 0, end: 6 },
+      { type: 'end' },
+      { type: 'line-end' },
+    ];
+    const html = renderHtml(events, 'import');
+    expect(html).toContain('class="keyword"');
+    expect(html).toContain('data-capture="import"');
+    expect(html).toContain(
+      '<span class="keyword" data-capture="import">import</span>',
+    );
+  });
+
+  it('preserves the full suffix in data-capture for deep captures', () => {
+    const events: HighlightEvent[] = [
+      { type: 'line-start' },
+      { type: 'start', captureName: 'comment.documentation.java' },
+      { type: 'source', start: 0, end: 3 },
+      { type: 'end' },
+      { type: 'line-end' },
+    ];
+    const html = renderHtml(events, '/**');
+    expect(html).toContain('class="comment"');
+    expect(html).toContain('data-capture="documentation.java"');
   });
 
   it('renders mixed highlighted and plain text', () => {
@@ -87,11 +127,11 @@ describe('renderHtml', () => {
     expect(html).toBe(
       '<pre class="bagra"><code>' +
         '<span class="line">' +
-        '<span class="bagra-keyword">let</span>' +
+        '<span class="keyword">let</span>' +
         ' ' +
-        '<span class="bagra-variable">x</span>' +
+        '<span class="variable">x</span>' +
         ' = ' +
-        '<span class="bagra-number">1</span>' +
+        '<span class="number">1</span>' +
         '</span>' +
         '</code></pre>',
     );
@@ -114,8 +154,8 @@ describe('renderHtml', () => {
     expect(html).toBe(
       '<pre class="bagra"><code>' +
         '<span class="line">' +
-        '<span class="bagra-number">16' +
-        '<span class="bagra-type">px</span>' +
+        '<span class="number">16' +
+        '<span class="type">px</span>' +
         '</span>' +
         '</span>' +
         '</code></pre>',
@@ -147,22 +187,21 @@ describe('renderHtml', () => {
     const html = renderHtml(events, source);
     expect(html).toBe(
       '<pre class="bagra"><code>' +
-        '<span class="line"><span class="bagra-tag">&lt;b&gt;</span></span>' +
+        '<span class="line"><span class="tag">&lt;b&gt;</span></span>' +
         '</code></pre>',
     );
   });
 
-  it('handles dotted capture names in class attributes', () => {
+  it('escapes HTML special characters in data-capture value', () => {
     const events: HighlightEvent[] = [
       { type: 'line-start' },
-      { type: 'start', captureName: 'punctuation.delimiter' },
+      { type: 'start', captureName: 'comment.a"b' },
       { type: 'source', start: 0, end: 1 },
       { type: 'end' },
       { type: 'line-end' },
     ];
-
-    const html = renderHtml(events, ':');
-    expect(html).toContain('class="bagra-punctuation-delimiter"');
+    const html = renderHtml(events, 'x');
+    expect(html).toContain('data-capture="a&quot;b"');
   });
 
   it('emits data-theme attribute on <pre> when theme is provided', () => {
@@ -196,7 +235,6 @@ describe('renderHtml', () => {
   });
 
   it('renders multi-line output with \\n between line spans', () => {
-    // Two lines: "ab" and "cd"
     const source = 'ab\ncd';
     const events: HighlightEvent[] = [
       { type: 'line-start' },
@@ -217,17 +255,16 @@ describe('renderHtml', () => {
   });
 
   it('renders highlights that close and reopen across lines', () => {
-    // Multi-line comment: "/*a\nb*/"
     const source = '/*a\nb*/';
     const events: HighlightEvent[] = [
       { type: 'line-start' },
       { type: 'start', captureName: 'comment' },
-      { type: 'source', start: 0, end: 3 }, // "/*a"
+      { type: 'source', start: 0, end: 3 },
       { type: 'end' },
       { type: 'line-end' },
       { type: 'line-start' },
       { type: 'start', captureName: 'comment' },
-      { type: 'source', start: 4, end: 7 }, // "b*/"
+      { type: 'source', start: 4, end: 7 },
       { type: 'end' },
       { type: 'line-end' },
     ];
@@ -235,14 +272,13 @@ describe('renderHtml', () => {
     const html = renderHtml(events, source);
     expect(html).toBe(
       '<pre class="bagra"><code>' +
-        '<span class="line"><span class="bagra-comment">/*a</span></span>\n' +
-        '<span class="line"><span class="bagra-comment">b*/</span></span>' +
+        '<span class="line"><span class="comment">/*a</span></span>\n' +
+        '<span class="line"><span class="comment">b*/</span></span>' +
         '</code></pre>',
     );
   });
 
   it('renders empty lines correctly', () => {
-    // Source: "a\n\nb"
     const source = 'a\n\nb';
     const events: HighlightEvent[] = [
       { type: 'line-start' },
