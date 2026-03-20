@@ -1,5 +1,5 @@
-import type { HighlightEvent } from '../types';
-import { captureToSpanAttrs } from '../utils';
+import { captureToSpanAttrs } from '@/core/utils';
+import type { HighlightEvent } from '@/highlight/types';
 
 /**
  * Escape special HTML characters in source text.

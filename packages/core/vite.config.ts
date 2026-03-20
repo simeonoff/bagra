@@ -5,17 +5,22 @@ import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src'),
+    },
+  },
   build: {
     lib: {
       entry: {
         index: 'src/index.ts',
-        theme: 'src/theme.ts',
+        theme: 'src/theme/index.ts',
       },
       formats: ['es'],
     },
     rollupOptions: {
       // web-tree-sitter dynamically imports 'fs/promises' and 'module' in Node.js;
-      // 'node:fs/promises' is used by our resolve-highlights.ts
+      // 'node:fs/promises' is used by our resolve-query.ts
       external: ['fs/promises', 'node:fs/promises', 'module'],
       onwarn(warning, warn) {
         if (
@@ -29,7 +34,7 @@ export default defineConfig({
     },
   },
   plugins: [
-    dts({ rollupTypes: false }),
+    dts({ rollupTypes: false, tsconfigPath: './tsconfig.build.json' }),
     {
       name: 'copy-styles-css',
       closeBundle() {

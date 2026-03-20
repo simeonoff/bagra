@@ -1,7 +1,13 @@
+import { resolve } from 'node:path';
 import wasmInlinePlugin from '@bagrajs/build-plugins/wasm-inline';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'packages/core/src'),
+    },
+  },
   test: {
     projects: [
       'packages/core',
@@ -11,6 +17,9 @@ export default defineConfig({
       {
         plugins: [wasmInlinePlugin()],
         resolve: {
+          alias: {
+            '@': resolve(__dirname, 'packages/core/src'),
+          },
           conditions: ['development'],
         },
         test: {

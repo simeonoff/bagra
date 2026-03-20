@@ -44,14 +44,14 @@ export type {
   BagraTheme,
   Base16Scheme,
   CodeOptions,
-  HastElement,
-  HastNode,
-  HastRoot,
-  HastText,
+  Element,
   HighlightEvent,
   Highlighter,
   HighlighterOptions,
   LanguageDefinition,
+  Root,
+  RootContent,
+  Text,
   Token,
 } from '@bagrajs/core';
 

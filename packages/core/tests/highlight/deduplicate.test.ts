@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { QueryCapture } from 'web-tree-sitter';
-import { deduplicateCaptures } from '../../src/pipeline/deduplicate';
+import { deduplicateCaptures } from '@/highlight/deduplicate';
 
 /**
  * Helper to create a mock QueryCapture with the fields

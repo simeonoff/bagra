@@ -1,5 +1,7 @@
+import type { QueryContent } from '@/core/types';
+
 /**
- * Resolve a highlights query from either a file path/URL or pre-loaded content.
+ * Resolve a query from either a file path/URL or pre-loaded content.
  *
  * - `{ content: string }` — returns the content directly
  * - `string` starting with `http://` or `https://` — fetches the URL
@@ -7,17 +9,15 @@
  *   with compat), falls back to `fetch()` for runtimes without filesystem access
  *   (browsers, edge runtimes)
  *
- * @param highlights - The highlights query to resolve, either as a path/URL string or an object with pre-loaded content.
- * @returns A promise that resolves to the highlights query content string.
+ * @param query - The query to resolve, either as a path/URL string or an object with pre-loaded content.
+ * @returns A promise that resolves to the query content string.
  */
-export async function resolveHighlights(
-  highlights: string | { content: string },
-): Promise<string> {
-  if (typeof highlights === 'object') {
-    return highlights.content;
+export async function resolveQuery(query: QueryContent): Promise<string> {
+  if (typeof query === 'object') {
+    return query.content;
   }
 
-  return loadTextFile(highlights);
+  return loadTextFile(query);
 }
 
 /**
@@ -55,7 +55,7 @@ async function fetchText(url: string): Promise<string> {
 
   if (!res.ok) {
     throw new Error(
-      `Failed to load highlights query from "${url}": ${res.status} ${res.statusText}`,
+      `Failed to load query from "${url}": ${res.status} ${res.statusText}`,
     );
   }
 

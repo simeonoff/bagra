@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { QueryCapture } from 'web-tree-sitter';
-import { generateEvents } from '../../src/pipeline/events';
-import type { HighlightEvent } from '../../src/types';
+import { generateEvents } from '@/highlight/events';
+import type { HighlightEvent } from '@/types';
 
 /**
  * Helper to create a mock QueryCapture for the events generator.

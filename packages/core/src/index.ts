@@ -27,15 +27,13 @@
  *
  * @module
  */
+
+export type { Element, Root, RootContent, Text } from 'hast';
 export { createHighlighter } from './highlighter';
 export type { BagraTheme, Base16Scheme } from './theme';
 export { generateThemeCSS, generateThemeCSSWithMediaQuery } from './theme';
 export type {
   CodeOptions,
-  HastElement,
-  HastNode,
-  HastRoot,
-  HastText,
   HighlightEvent,
   Highlighter,
   HighlighterOptions,

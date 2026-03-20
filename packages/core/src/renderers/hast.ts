@@ -1,5 +1,12 @@
-import type { HastElement, HastNode, HastRoot, HighlightEvent } from '../types';
-import { captureToSpanAttrs } from '../utils';
+import type {
+  Element,
+  ElementContent,
+  Properties,
+  Root,
+  RootContent,
+} from 'hast';
+import { captureToSpanAttrs } from '@/core/utils';
+import type { HighlightEvent } from '@/highlight/types';
 
 /**
  * Render a highlight event stream into a HAST (Hypertext Abstract Syntax Tree).
@@ -17,21 +24,21 @@ import { captureToSpanAttrs } from '../utils';
  * @param events - The line-wrapped event stream from `generateEvents()`
  * @param source - The original source code string
  * @param theme - Optional theme name, sets `data-theme` attribute on the `<pre>` element
- * @returns A {@link HastRoot} node representing the highlighted code block.
+ * @returns A {@link Root} node representing the highlighted code block.
  */
 export function renderHast(
   events: HighlightEvent[],
   source: string,
   theme?: string,
-): HastRoot {
-  const codeChildren: HastNode[] = [];
+): Root {
+  const codeChildren: RootContent[] = [];
 
   // The current line span element (set on line-start, pushed to codeChildren on line-end)
-  let currentLine: HastElement | null = null;
+  let currentLine: Element | null = null;
 
   // Stack of parent element child arrays. The top is the current container
   // for new children (either the line span's children or a nested span's children).
-  let stack: HastNode[][] = [];
+  let stack: ElementContent[][] = [];
 
   let isFirstLine = true;
 
@@ -67,7 +74,7 @@ export function renderHast(
         const current = stack[stack.length - 1];
         const attrs = captureToSpanAttrs(event.captureName);
 
-        const properties: HastElement['properties'] = {
+        const properties: Properties = {
           className: [attrs.class],
         };
 
@@ -75,7 +82,7 @@ export function renderHast(
           properties.dataCapture = attrs.dataCapture;
         }
 
-        const span: HastElement = {
+        const span: Element = {
           type: 'element',
           tagName: 'span',
           properties,
@@ -101,14 +108,14 @@ export function renderHast(
     }
   }
 
-  const code: HastElement = {
+  const code: Element = {
     type: 'element',
     tagName: 'code',
     properties: {},
-    children: codeChildren,
+    children: codeChildren as ElementContent[],
   };
 
-  const preProperties: Record<string, string | number | boolean | string[]> = {
+  const preProperties: Properties = {
     className: ['bagra'],
   };
 
@@ -116,7 +123,7 @@ export function renderHast(
     preProperties.dataTheme = theme;
   }
 
-  const pre: HastElement = {
+  const pre: Element = {
     type: 'element',
     tagName: 'pre',
     properties: preProperties,

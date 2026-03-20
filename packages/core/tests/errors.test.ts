@@ -1,6 +1,6 @@
 import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-import { createHighlighter } from '../src/highlighter';
+import { createHighlighter } from '@/highlighter';
 
 const FIXTURES = resolve(__dirname, '../../../internal/test-utils/fixtures');
 const GRAMMAR_PATH = resolve(FIXTURES, 'tree-sitter-scss.wasm');

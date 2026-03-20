@@ -1,28 +1,4 @@
 /**
- * Theme utilities for bagra.
- *
- * Provides types and functions for working with Base16 color schemes:
- *
- * - {@link BagraTheme} — the theme object consumed by the highlighter
- * - {@link generateScheme} — generates bare CSS custom property declarations
- * - {@link generateThemeCSS} — generates scoped CSS blocks for multiple themes
- * - {@link generateThemeCSSWithMediaQuery} — generates `prefers-color-scheme` media query blocks
- *
- * @example
- * ```ts
- * import { generateThemeCSS } from '@bagrajs/core';
- * import { nord, ayuLight } from '@bagrajs/themes';
- *
- * // Generate scoped CSS for loaded themes
- * const css = generateThemeCSS([nord, ayuLight]);
- * // => .bagra[data-theme="nord"] { --base00: #2e3440; ... }
- * //    .bagra[data-theme="ayu-light"] { --base00: #f8f9fa; ... }
- * ```
- *
- * @module
- */
-
-/**
  * A Base16 color scheme — 16 named colors that define a complete theme.
  *
  * Colors should be valid CSS color values (typically hex like `#2e3440`).
@@ -145,65 +121,4 @@ export function generateScheme(scheme: Base16Scheme): string {
   }
 
   return lines.join('\n');
-}
-
-export interface BagraTheme {
-  name: string;
-  displayName?: string;
-  variant?: 'light' | 'dark' | string;
-  author?: string;
-  colors: Base16Scheme;
-}
-
-/**
- * Generate CSS blocks for multiple themes, each scoped to a selector like `.bagra[data-theme="..."]`.
- * The output is a string of CSS rules that can be included in a stylesheet.
- *
- * @param themes - An array of theme {@link BagraTheme} objects, each with a name and Base16 colors.
- * @return A string of CSS rules, one for each theme, with custom properties for the Base16 colors.
- */
-export function generateThemeCSS(themes: BagraTheme[]): string {
-  const result: string[] = [];
-
-  for (const theme of themes) {
-    const selector = `.bagra[data-theme="${theme.name}"]`;
-    const declarations = generateScheme(theme.colors);
-
-    result.push(`${selector} {\n${declarations}\n}`);
-  }
-
-  return result.join('\n\n');
-}
-
-/**
- * Generate `@media (prefers-color-scheme: ...)` blocks scoped to `.bagra`.
- *
- * The generated CSS acts as the default theme for code blocks that don't have
- * an explicit `data-theme` attribute. When a specific theme is set via
- * `data-theme`, the `.bagra[data-theme="..."]` selector from
- * {@link generateThemeCSS} wins due to higher specificity.
- *
- * @param themes - An object with `light` and `dark` keys, each a {@link BagraTheme}.
- * @returns A string of CSS rules that apply the appropriate theme based on the user's system preference.
- */
-export function generateThemeCSSWithMediaQuery(themes: {
-  light: BagraTheme;
-  dark: BagraTheme;
-}): string {
-  const result: string[] = [];
-
-  for (const variant of ['light', 'dark'] as const) {
-    const theme = themes[variant];
-    const mediaQuery = `@media (prefers-color-scheme: ${variant})`;
-    const declarations = generateScheme(theme.colors);
-
-    result.push(
-      `${mediaQuery} {\n  .bagra {\n${declarations
-        .split('\n')
-        .map((line) => `  ${line}`)
-        .join('\n')}\n  }\n}`,
-    );
-  }
-
-  return result.join('\n\n');
 }

@@ -1,5 +1,5 @@
 import type { QueryCapture } from 'web-tree-sitter';
-import type { HighlightEvent } from '../types';
+import type { HighlightEvent } from '@/highlight/types';
 
 interface ActiveHighlight {
   captureName: string;

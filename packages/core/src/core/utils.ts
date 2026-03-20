@@ -1,4 +1,19 @@
 /**
+ * Get the value for `key` from the map, or create it with `init`,
+ * store it, and return it.
+ */
+export function getOrCreate<K, V>(map: Map<K, V>, key: K, init: () => V): V {
+  let value = map.get(key);
+
+  if (value === undefined) {
+    value = init();
+    map.set(key, value);
+  }
+
+  return value;
+}
+
+/**
  * Parse a tree-sitter capture name into HTML span attributes.
  *
  * The first segment becomes the CSS class name. Any remaining segments,

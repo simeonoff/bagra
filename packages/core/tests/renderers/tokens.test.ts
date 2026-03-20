@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { renderTokens } from '../../src/renderers/tokens';
-import type { HighlightEvent } from '../../src/types';
+import { renderTokens } from '@/renderers/tokens';
+import type { HighlightEvent } from '@/types';
 
 describe('renderTokens', () => {
   it('returns a single empty line for empty events with just line markers', () => {
