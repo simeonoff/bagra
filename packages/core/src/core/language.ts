@@ -12,59 +12,6 @@ export interface LoadedLanguage {
 }
 
 /**
- * Known neovim-specific predicates that web-tree-sitter does not handle.
- * When encountered, the library warns because they are silently treated as
- * always-true, which can cause incorrect highlight assignments.
- *
- * @see https://neovim.io/doc/user/treesitter.html#treesitter-predicates
- */
-const UNSUPPORTED_PREDICATES = new Set([
-  'lua-match?',
-  'not-lua-match?',
-  'vim-match?',
-  'not-vim-match?',
-  'contains?',
-  'not-contains?',
-  'has-ancestor?',
-  'not-has-ancestor?',
-  'has-parent?',
-  'not-has-parent?',
-]);
-
-/**
- * Inspect a query for unsupported predicates (e.g. neovim-specific ones)
- * and emit a console warning. These predicates are silently treated as
- * always-true by web-tree-sitter, which can cause incorrect highlights.
- */
-function warnUnsupportedPredicates(query: Query, languageName: string): void {
-  const found = new Map<string, number>();
-
-  for (const patternPredicates of query.predicates) {
-    for (const predicate of patternPredicates) {
-      const op = predicate.operator;
-
-      if (UNSUPPORTED_PREDICATES.has(op)) {
-        found.set(op, (found.get(op) ?? 0) + 1);
-      }
-    }
-  }
-
-  if (found.size > 0) {
-    const details = [...found.entries()]
-      .map(([op, count]) => `#${op} (${count}×)`)
-      .join(', ');
-
-    console.warn(
-      `[bagra] Language "${languageName}": highlights query ` +
-        `contains unsupported predicates: ${details}. ` +
-        'These predicates are silently ignored by web-tree-sitter and treated ' +
-        'as always matching, which may cause incorrect highlighting. ' +
-        'Replace them with portable equivalents (e.g. #match? instead of #lua-match?).',
-    );
-  }
-}
-
-/**
  * Resolve a query's content, including any inherited queries specified
  * via modeline directives.
  *
@@ -143,7 +90,6 @@ async function resolveQueryWithInheritance(
  *   an empty object (no inheritance resolution).
  */
 export async function initLanguage(
-  name: string,
   definition: LanguageDefinition,
   definitions: Record<string, LanguageDefinition> = {},
 ): Promise<LoadedLanguage> {
@@ -161,10 +107,7 @@ export async function initLanguage(
           type,
           definitions,
         );
-        const query = new Query(language, content);
-
-        warnUnsupportedPredicates(query, name);
-        queries.set(type, query);
+        queries.set(type, new Query(language, content));
       }),
   );
 

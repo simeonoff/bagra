@@ -1,4 +1,8 @@
 import type { QueryCapture, Range, Tree } from 'web-tree-sitter';
+import {
+  filterCapturesByPredicates,
+  filterMatchesByPredicates,
+} from '@/core/predicates';
 import type { HighlightContext } from '@/highlight';
 import { interleaveCaptures } from '@/highlight/deduplicate';
 import type { LayeredCapture } from '@/highlight/types';
@@ -84,7 +88,11 @@ export function collectCaptures(
 
     const highlightsQuery = loaded.queries.get('highlights');
     const rawCaptures = highlightsQuery
-      ? highlightsQuery.captures(tree.rootNode)
+      ? filterCapturesByPredicates(
+          highlightsQuery.captures(tree.rootNode),
+          highlightsQuery.predicates,
+          ctx.predicates,
+        )
       : [];
 
     // Tag each capture with its depth
@@ -96,7 +104,12 @@ export function collectCaptures(
     const injectionsQuery = loaded.queries.get('injections');
 
     if (injectionsQuery) {
-      const matches = injectionsQuery.matches(tree.rootNode);
+      const rawMatches = injectionsQuery.matches(tree.rootNode);
+      const matches = filterMatchesByPredicates(
+        rawMatches,
+        injectionsQuery.predicates,
+        ctx.predicates,
+      );
       const descriptors = parseInjections(matches, currentLang, parentLang);
 
       for (const descriptor of descriptors) {

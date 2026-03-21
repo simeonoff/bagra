@@ -1,6 +1,8 @@
 import type { Root } from 'hast';
+import type { PredicateHandler } from '@/core/predicates';
 import type { BagraTheme } from '@/theme';
 
+export type { PredicateHandler } from '@/core/predicates';
 // Re-export types from their domain modules for public API consumers
 export type { LanguageDefinition, QueryContent } from '@/core/types';
 export type { HighlightEvent } from '@/highlight/types';
@@ -52,6 +54,31 @@ export interface HighlighterOptions {
    * to set CSS variables or classes based on the theme name.
    */
   themes?: BagraTheme[];
+
+  /**
+   * Custom predicate handlers to register with the highlighter.
+   *
+   * These are evaluated as post-filters on query matches/captures.
+   * Built-in predicates (like `lua-match?`, `contains?`, `has-ancestor?`)
+   * are always available. Custom predicates defined here can override
+   * built-ins with the same operator name.
+   *
+   * The operator name should include the trailing `?` or `!` —
+   * e.g., `'my-check?'`.
+   *
+   * @example
+   * ```ts
+   * const hl = await createHighlighter({
+   *   predicates: {
+   *     'my-check?': ({ match, predicate }) => {
+   *       // return true to keep, false to filter out
+   *       return true;
+   *     },
+   *   },
+   * });
+   * ```
+   */
+  predicates?: Record<string, PredicateHandler>;
 }
 
 /**

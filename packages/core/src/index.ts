@@ -38,5 +38,6 @@ export type {
   Highlighter,
   HighlighterOptions,
   LanguageDefinition,
+  PredicateHandler,
   Token,
 } from './types';

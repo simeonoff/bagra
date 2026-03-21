@@ -1,5 +1,5 @@
 import { grammar, query } from '@bagrajs/test-utils';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { createHighlighter } from '@/highlighter';
 
 const GRAMMAR_PATH = grammar('scss');
@@ -131,134 +131,10 @@ describe('error: invalid grammar', () => {
   });
 });
 
-describe('warning: unsupported predicates', () => {
-  it('warns when highlights query contains #lua-match?', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    const hl = await createHighlighter({
-      languages: {
-        scss: {
-          grammar: GRAMMAR_PATH,
-          highlights: {
-            content: `
-              (identifier) @variable
-              ((identifier) @function
-                (#lua-match? @function "^[A-Z]"))
-            `,
-          },
-        },
-      },
-    });
-
-    expect(warnSpy).toHaveBeenCalledOnce();
-    expect(warnSpy.mock.calls[0][0]).toMatch(/unsupported predicates/);
-    expect(warnSpy.mock.calls[0][0]).toMatch(/#lua-match\?/);
-    expect(warnSpy.mock.calls[0][0]).toMatch(/Language "scss"/);
-
-    hl.dispose();
-    warnSpy.mockRestore();
-  });
-
-  it('warns when highlights query contains #vim-match?', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    const hl = await createHighlighter({
-      languages: {
-        scss: {
-          grammar: GRAMMAR_PATH,
-          highlights: {
-            content: `
-              (identifier) @variable
-              ((identifier) @constant
-                (#vim-match? @constant "^[A-Z_]+$"))
-            `,
-          },
-        },
-      },
-    });
-
-    expect(warnSpy).toHaveBeenCalledOnce();
-    expect(warnSpy.mock.calls[0][0]).toMatch(/#vim-match\?/);
-
-    hl.dispose();
-    warnSpy.mockRestore();
-  });
-
-  it('does not warn when query uses only portable predicates', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    const hl = await createHighlighter({
-      languages: {
-        scss: {
-          grammar: GRAMMAR_PATH,
-          highlights: {
-            content: `
-              (identifier) @variable
-              ((identifier) @function
-                (#match? @function "^[A-Z]"))
-            `,
-          },
-        },
-      },
-    });
-
-    expect(warnSpy).not.toHaveBeenCalled();
-
-    hl.dispose();
-    warnSpy.mockRestore();
-  });
-
-  it('includes count of predicate occurrences in warning', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    const hl = await createHighlighter({
-      languages: {
-        scss: {
-          grammar: GRAMMAR_PATH,
-          highlights: {
-            content: `
-              ((identifier) @variable
-                (#lua-match? @variable "^[$]"))
-              ((identifier) @function
-                (#lua-match? @function "^[A-Z]"))
-            `,
-          },
-        },
-      },
-    });
-
-    expect(warnSpy).toHaveBeenCalledOnce();
-    // Should show the count: 2×
-    expect(warnSpy.mock.calls[0][0]).toMatch(/2×/);
-
-    hl.dispose();
-    warnSpy.mockRestore();
-  });
-
-  it('suggests using #match? as a replacement', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    const hl = await createHighlighter({
-      languages: {
-        scss: {
-          grammar: GRAMMAR_PATH,
-          highlights: {
-            content: `
-              ((identifier) @variable
-                (#lua-match? @variable "^[-][-]"))
-            `,
-          },
-        },
-      },
-    });
-
-    expect(warnSpy.mock.calls[0][0]).toMatch(/#match\?/);
-    expect(warnSpy.mock.calls[0][0]).toMatch(/instead of/);
-
-    hl.dispose();
-    warnSpy.mockRestore();
-  });
-});
+// Note: predicate warning tests were removed because predicates like
+// #lua-match?, #contains?, #has-ancestor?, etc. are now handled natively
+// by the predicate registry (see core/predicates.ts). The old warning
+// system for "unsupported predicates" is no longer needed.
 
 describe('error: invalid highlights query', () => {
   it('throws when highlights content has invalid syntax', async () => {

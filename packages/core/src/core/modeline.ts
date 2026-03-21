@@ -18,16 +18,14 @@ export interface QueryModeline {
    * Languages whose queries should be prepended to this one.
    *
    * Parenthesized languages are optional — they are only included
-   * when the file is loaded directly, not when it's being inherited
-   * by another language.
+   * when the file is loaded directly, not when it's being inherited by another language.
    *
    * @example `; inherits: ecma,(jsx)` → `[{ language: 'ecma', optional: false }, { language: 'jsx', optional: true }]`
    */
   inherits: InheritedLanguage[];
 
   /**
-   * When `true`, this query should be appended to (rather than replace)
-   * the base query for the language.
+   * When `true`, this query should be appended to (rather than replace) the base query for the language.
    *
    * This is primarily a Neovim user/plugin layering mechanism.
    */
