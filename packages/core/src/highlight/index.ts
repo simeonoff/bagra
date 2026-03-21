@@ -1,4 +1,4 @@
-import type { Parser } from 'web-tree-sitter';
+import type { Parser, Tree } from 'web-tree-sitter';
 import type { LoadedLanguage } from '@/core/language';
 import { collectCaptures } from '@/highlight/collect';
 import { generateEvents } from '@/highlight/events';
@@ -35,10 +35,13 @@ export function highlight(
   lang: string,
   code: string,
 ): HighlightEvent[] {
-  const { captures, trees } = collectCaptures(ctx, lang, code);
+  let trees: Tree[] = [];
 
   try {
-    return generateEvents(captures, code.length, code);
+    const result = collectCaptures(ctx, lang, code);
+    trees = result.trees;
+
+    return generateEvents(result.captures, code.length, code);
   } finally {
     for (const tree of trees) {
       tree.delete();
