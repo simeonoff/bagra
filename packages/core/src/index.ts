@@ -34,6 +34,7 @@ export type { BagraTheme, Base16Scheme } from './theme';
 export { generateThemeCSS, generateThemeCSSWithMediaQuery } from './theme';
 export type {
   CodeOptions,
+  DirectiveHandler,
   HighlightEvent,
   Highlighter,
   HighlighterOptions,

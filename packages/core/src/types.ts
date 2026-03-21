@@ -1,11 +1,46 @@
 import type { Root } from 'hast';
-import type { PredicateHandler } from '@/core/predicates';
+import type { QueryMatch, QueryPredicate } from 'web-tree-sitter';
 import type { BagraTheme } from '@/theme';
 
-export type { PredicateHandler } from '@/core/predicates';
 // Re-export types from their domain modules for public API consumers
 export type { LanguageDefinition, QueryContent } from '@/core/types';
 export type { HighlightEvent } from '@/highlight/types';
+
+/**
+ * Context passed to a predicate or directive handler.
+ */
+export interface QueryHandlerContext {
+  /** The full match that this predicate/directive belongs to. */
+  match: QueryMatch;
+  /** The predicate/directive and its operands. */
+  predicate: QueryPredicate;
+}
+
+/**
+ * A predicate handler function (operators ending in `?`).
+ *
+ * Returns `true` to keep the match, `false` to filter it out.
+ */
+export type PredicateHandler = (ctx: QueryHandlerContext) => boolean;
+
+/**
+ * A directive handler function (operators ending in `!`).
+ *
+ * Mutates the match or its captures in place. Does not filter.
+ */
+export type DirectiveHandler = (ctx: QueryHandlerContext) => void;
+
+/** Map of predicate operator names to handlers. */
+export type PredicateRegistry = Map<string, PredicateHandler>;
+
+/** Map of directive operator names to handlers. */
+export type DirectiveRegistry = Map<string, DirectiveHandler>;
+
+/** Both registries bundled together. */
+export interface QueryRegistries {
+  predicates: PredicateRegistry;
+  directives: DirectiveRegistry;
+}
 export type {
   Element,
   Root,
@@ -63,7 +98,7 @@ export interface HighlighterOptions {
    * are always available. Custom predicates defined here can override
    * built-ins with the same operator name.
    *
-   * The operator name should include the trailing `?` or `!` —
+   * The operator name should include the trailing `?` —
    * e.g., `'my-check?'`.
    *
    * @example
@@ -79,6 +114,28 @@ export interface HighlighterOptions {
    * ```
    */
   predicates?: Record<string, PredicateHandler>;
+
+  /**
+   * Custom directive handlers to register with the highlighter.
+   *
+   * Directives (operators ending in `!`) mutate match captures in place
+   * rather than filtering them. They run before predicates.
+   *
+   * Built-in directives (like `offset!`) are always available.
+   * Custom directives defined here can override built-ins.
+   *
+   * @example
+   * ```ts
+   * const hl = await createHighlighter({
+   *   directives: {
+   *     'my-transform!': ({ match, predicate }) => {
+   *       // mutate match.captures as needed
+   *     },
+   *   },
+   * });
+   * ```
+   */
+  directives?: Record<string, DirectiveHandler>;
 }
 
 /**

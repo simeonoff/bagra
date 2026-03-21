@@ -1,9 +1,9 @@
 import type { Parser } from 'web-tree-sitter';
 import type { LoadedLanguage } from '@/core/language';
-import type { PredicateRegistry } from '@/core/predicates';
 import { collectCaptures } from '@/highlight/collect';
 import { generateEvents } from '@/highlight/events';
 import type { HighlightEvent } from '@/highlight/types';
+import type { QueryRegistries } from '@/types';
 
 /**
  * Shared state needed by the highlight pipeline.
@@ -14,7 +14,7 @@ import type { HighlightEvent } from '@/highlight/types';
 export interface HighlightContext {
   parser: Parser;
   languages: Map<string, LoadedLanguage>;
-  predicates: PredicateRegistry;
+  registries: QueryRegistries;
 }
 
 /**

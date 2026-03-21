@@ -2,10 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { parseModeline, stripModeline } from '@/core/modeline';
 
 describe('parseModeline', () => {
-  // -----------------------------------------------------------------------
-  // No modelines
-  // -----------------------------------------------------------------------
-
   it('returns empty result for content with no modelines', () => {
     const result = parseModeline('(identifier) @variable');
 
@@ -19,10 +15,6 @@ describe('parseModeline', () => {
     expect(result.inherits).toEqual([]);
     expect(result.extends).toBe(false);
   });
-
-  // -----------------------------------------------------------------------
-  // inherits
-  // -----------------------------------------------------------------------
 
   it('parses a single inherits directive', () => {
     const content = '; inherits: ecma\n\n(identifier) @variable';
@@ -82,10 +74,6 @@ describe('parseModeline', () => {
     ]);
   });
 
-  // -----------------------------------------------------------------------
-  // extends
-  // -----------------------------------------------------------------------
-
   it('parses the extends directive', () => {
     const content = '; extends\n\n(identifier) @variable';
     const result = parseModeline(content);
@@ -100,10 +88,6 @@ describe('parseModeline', () => {
 
     expect(result.extends).toBe(true);
   });
-
-  // -----------------------------------------------------------------------
-  // Combined
-  // -----------------------------------------------------------------------
 
   it('parses both inherits and extends together', () => {
     const content =
@@ -133,10 +117,6 @@ describe('parseModeline', () => {
     expect(result.inherits).toEqual([{ language: 'ecma', optional: false }]);
     expect(result.extends).toBe(true);
   });
-
-  // -----------------------------------------------------------------------
-  // Edge cases
-  // -----------------------------------------------------------------------
 
   it('stops parsing at the first non-comment line', () => {
     const content = '; inherits: ecma\n(identifier) @variable\n; inherits: jsx';

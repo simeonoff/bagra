@@ -1,3 +1,22 @@
+import type { QueryCapture, QueryMatch, QueryPredicate } from 'web-tree-sitter';
+
+/**
+ * Resolve a capture name to its capture from a match's captures array.
+ */
+export function resolveCapture(
+  match: QueryMatch,
+  captureName: string,
+): QueryCapture | undefined {
+  return match.captures.find((c) => c.name === captureName);
+}
+
+/**
+ * Classify a predicate as a directive (`!` suffix) vs a predicate (`?` suffix).
+ */
+export function isDirective(predicate: QueryPredicate): boolean {
+  return predicate.operator.endsWith('!');
+}
+
 /**
  * Get the value for `key` from the map, or create it with `init`,
  * store it, and return it.

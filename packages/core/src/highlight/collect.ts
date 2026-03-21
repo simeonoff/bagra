@@ -1,4 +1,5 @@
 import type { QueryCapture, Range, Tree } from 'web-tree-sitter';
+import { applyDirectives, applyDirectivesToCaptures } from '@/core/directives';
 import {
   filterCapturesByPredicates,
   filterMatchesByPredicates,
@@ -86,14 +87,26 @@ export function collectCaptures(
 
     const trees: Tree[] = [tree];
 
+    const { predicates, directives } = ctx.registries;
+
     const highlightsQuery = loaded.queries.get('highlights');
-    const rawCaptures = highlightsQuery
-      ? filterCapturesByPredicates(
-          highlightsQuery.captures(tree.rootNode),
-          highlightsQuery.predicates,
-          ctx.predicates,
-        )
-      : [];
+    let rawCaptures: QueryCapture[] = [];
+
+    if (highlightsQuery) {
+      rawCaptures = highlightsQuery.captures(tree.rootNode);
+
+      applyDirectivesToCaptures(
+        rawCaptures,
+        highlightsQuery.predicates,
+        directives,
+      );
+
+      rawCaptures = filterCapturesByPredicates(
+        rawCaptures,
+        highlightsQuery.predicates,
+        predicates,
+      );
+    }
 
     // Tag each capture with its depth
     const captures: LayeredCapture[] = rawCaptures.map((capture) => ({
@@ -105,11 +118,15 @@ export function collectCaptures(
 
     if (injectionsQuery) {
       const rawMatches = injectionsQuery.matches(tree.rootNode);
+
+      applyDirectives(rawMatches, injectionsQuery.predicates, directives);
+
       const matches = filterMatchesByPredicates(
         rawMatches,
         injectionsQuery.predicates,
-        ctx.predicates,
+        predicates,
       );
+
       const descriptors = parseInjections(matches, currentLang, parentLang);
 
       for (const descriptor of descriptors) {

@@ -1,7 +1,7 @@
 import type { Root } from 'hast';
 import { Parser } from 'web-tree-sitter';
 import { initLanguage, type LoadedLanguage } from '@/core/language';
-import { createPredicateRegistry } from '@/core/predicates';
+import { createRegistries } from '@/core/registry';
 import type { LanguageDefinition } from '@/core/types';
 import { type HighlightContext, highlight } from '@/highlight';
 import type { HighlightEvent } from '@/highlight/types';
@@ -70,8 +70,11 @@ export async function createHighlighter(
   const parser = new Parser();
   const languages = new Map<string, LoadedLanguage>();
   const themes = new Map<string, BagraTheme>();
-  const predicates = createPredicateRegistry(options.predicates);
-  const ctx: HighlightContext = { parser, languages, predicates };
+  const registries = createRegistries({
+    predicates: options.predicates,
+    directives: options.directives,
+  });
+  const ctx: HighlightContext = { parser, languages, registries };
 
   let disposed = false;
 

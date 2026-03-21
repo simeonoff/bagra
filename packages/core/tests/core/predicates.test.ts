@@ -6,11 +6,11 @@ import type {
   QueryPredicate,
 } from 'web-tree-sitter';
 import {
-  createPredicateRegistry,
   filterCapturesByPredicates,
   filterMatchesByPredicates,
   luaPatternToRegex,
 } from '@/core/predicates';
+import { createRegistries } from '@/core/registry';
 
 let nodeId = 0;
 
@@ -108,7 +108,7 @@ describe('luaPatternToRegex', () => {
 });
 
 describe('lua-match? predicate', () => {
-  const registry = createPredicateRegistry();
+  const { predicates: registry } = createRegistries();
 
   it('keeps matches where the pattern matches', () => {
     const node = mockNode('MyComponent');
@@ -194,7 +194,7 @@ describe('lua-match? predicate', () => {
 });
 
 describe('not-lua-match? predicate', () => {
-  const registry = createPredicateRegistry();
+  const { predicates: registry } = createRegistries();
 
   it('keeps matches where the pattern does NOT match', () => {
     const node = mockNode('lowercase');
@@ -220,7 +220,7 @@ describe('not-lua-match? predicate', () => {
 });
 
 describe('contains? predicate', () => {
-  const registry = createPredicateRegistry();
+  const { predicates: registry } = createRegistries();
 
   it('keeps matches where node text contains the substring', () => {
     const node = mockNode('hello world');
@@ -264,7 +264,7 @@ describe('contains? predicate', () => {
 });
 
 describe('has-ancestor? predicate', () => {
-  const registry = createPredicateRegistry();
+  const { predicates: registry } = createRegistries();
 
   it('keeps matches where ancestor exists', () => {
     const grandparent = mockNode('', { type: 'function_declaration' });
@@ -305,7 +305,7 @@ describe('has-ancestor? predicate', () => {
 });
 
 describe('has-parent? predicate', () => {
-  const registry = createPredicateRegistry();
+  const { predicates: registry } = createRegistries();
 
   it('keeps matches where immediate parent type matches', () => {
     const parent = mockNode('', { type: 'function_declaration' });
@@ -363,9 +363,9 @@ describe('has-parent? predicate', () => {
   });
 });
 
-describe('createPredicateRegistry', () => {
+describe('createRegistries', () => {
   it('includes all built-in predicates', () => {
-    const registry = createPredicateRegistry();
+    const { predicates: registry } = createRegistries();
     expect(registry.has('lua-match?')).toBe(true);
     expect(registry.has('not-lua-match?')).toBe(true);
     expect(registry.has('contains?')).toBe(true);
@@ -376,9 +376,15 @@ describe('createPredicateRegistry', () => {
     expect(registry.has('not-has-parent?')).toBe(true);
   });
 
+  it('includes built-in directives', () => {
+    const { directives } = createRegistries();
+    expect(directives.has('offset!')).toBe(true);
+  });
+
   it('allows custom predicates to override built-ins', () => {
-    const custom = { 'lua-match?': () => false };
-    const registry = createPredicateRegistry(custom);
+    const { predicates: registry } = createRegistries({
+      predicates: { 'lua-match?': () => false },
+    });
 
     const node = mockNode('ABC');
     const match = mockMatch([mockCapture('name', node)]);
@@ -392,17 +398,17 @@ describe('createPredicateRegistry', () => {
   });
 
   it('allows adding new custom predicates', () => {
-    const custom = {
-      'starts-with?': ({ match, predicate: p }: any) => {
-        const capture = match.captures.find(
-          (c: any) => c.name === p.operands[0]?.name,
-        );
+    const { predicates: registry } = createRegistries({
+      predicates: {
+        'starts-with?': ({ match, predicate: p }: any) => {
+          const capture = match.captures.find(
+            (c: any) => c.name === p.operands[0]?.name,
+          );
 
-        return capture?.node.text.startsWith(p.operands[1]?.value);
+          return capture?.node.text.startsWith(p.operands[1]?.value);
+        },
       },
-    };
-
-    const registry = createPredicateRegistry(custom);
+    });
 
     const node = mockNode('test_value');
     const match = mockMatch([mockCapture('name', node)]);
@@ -416,7 +422,7 @@ describe('createPredicateRegistry', () => {
 });
 
 describe('multiple predicates', () => {
-  const registry = createPredicateRegistry();
+  const { predicates: registry } = createRegistries();
 
   it('requires ALL predicates to pass (AND logic)', () => {
     const node = mockNode('MyComponent');
@@ -448,7 +454,7 @@ describe('multiple predicates', () => {
 });
 
 describe('unknown predicates', () => {
-  const registry = createPredicateRegistry();
+  const { predicates: registry } = createRegistries();
 
   it('treats unknown predicates as always-true', () => {
     const node = mockNode('test');
@@ -469,7 +475,7 @@ describe('unknown predicates', () => {
 });
 
 describe('filterCapturesByPredicates', () => {
-  const registry = createPredicateRegistry();
+  const { predicates: registry } = createRegistries();
 
   it('filters captures by their pattern predicates', () => {
     const goodNode = mockNode('MyComponent');
