@@ -79,7 +79,7 @@ export async function createHighlighter(
 
     const loaded = await Promise.all(
       entries.map(async ([name, definition]) => {
-        const lang = await initLanguage(definition, definitions);
+        const lang = await initLanguage(name, definition, definitions);
         return [name, lang] as const;
       }),
     );
@@ -139,7 +139,7 @@ export async function createHighlighter(
     ): Promise<void> {
       assertNotDisposed();
 
-      const lang = await initLanguage(definition);
+      const lang = await initLanguage(name, definition);
       languages.set(name, lang);
     },
 

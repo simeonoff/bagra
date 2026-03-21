@@ -1,13 +1,12 @@
 import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { grammar, query } from '@bagrajs/test-utils';
 import type { Element } from 'hast';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createHighlighter } from '@/highlighter';
 import type { Highlighter } from '@/types';
 
-const FIXTURES = resolve(__dirname, '../../../internal/test-utils/fixtures');
-const GRAMMAR_PATH = resolve(FIXTURES, 'tree-sitter-scss.wasm');
-const HIGHLIGHTS_PATH = resolve(FIXTURES, 'scss-highlights.scm');
+const GRAMMAR_PATH = grammar('scss');
+const HIGHLIGHTS_PATH = query('scss', 'highlights');
 
 let highlightsScm: string;
 

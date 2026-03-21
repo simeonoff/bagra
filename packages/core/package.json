@@ -46,6 +46,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
+    "@bagrajs/test-utils": "*",
     "@types/hast": "^3.0.4",
     "web-tree-sitter": "^0.26.6"
   }

@@ -143,6 +143,7 @@ async function resolveQueryWithInheritance(
  *   an empty object (no inheritance resolution).
  */
 export async function initLanguage(
+  name: string,
   definition: LanguageDefinition,
   definitions: Record<string, LanguageDefinition> = {},
 ): Promise<LoadedLanguage> {
@@ -162,7 +163,7 @@ export async function initLanguage(
         );
         const query = new Query(language, content);
 
-        warnUnsupportedPredicates(query, language.name!);
+        warnUnsupportedPredicates(query, name);
         queries.set(type, query);
       }),
   );

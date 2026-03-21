@@ -1,38 +1,43 @@
 import { describe, expect, it } from 'vitest';
-import type { QueryCapture } from 'web-tree-sitter';
-import { deduplicateCaptures } from '@/highlight/deduplicate';
+import { interleaveCaptures } from '@/highlight/deduplicate';
+import type { LayeredCapture } from '@/highlight/types';
+
+let nodeId = 0;
 
 /**
- * Helper to create a mock QueryCapture with the fields
- * that deduplication cares about.
+ * Create a mock {@link LayeredCapture} with the fields that interleaving reads.
  */
-function mockCapture(
+function mockLayered(
   name: string,
   patternIndex: number,
-  nodeId: number,
   startIndex: number,
   endIndex: number,
-): QueryCapture {
+  depth = 0,
+  id?: number,
+): LayeredCapture {
   return {
-    name,
-    patternIndex,
-    node: { id: nodeId, startIndex, endIndex } as any,
+    capture: {
+      name,
+      patternIndex,
+      node: { id: id ?? nodeId++, startIndex, endIndex } as any,
+    },
+    depth,
   };
 }
 
-describe('deduplicateCaptures', () => {
+describe('interleaveCaptures', () => {
   it('returns an empty array for empty input', () => {
-    expect(deduplicateCaptures([])).toEqual([]);
+    expect(interleaveCaptures([])).toEqual([]);
   });
 
-  it('returns the same array when no duplicates exist', () => {
+  it('returns captures unchanged when no duplicates exist', () => {
     const captures = [
-      mockCapture('variable', 0, 1, 0, 5),
-      mockCapture('keyword', 1, 2, 6, 11),
-      mockCapture('string', 2, 3, 12, 20),
+      mockLayered('variable', 0, 0, 5),
+      mockLayered('keyword', 1, 6, 11),
+      mockLayered('string', 2, 12, 20),
     ];
 
-    const result = deduplicateCaptures(captures);
+    const result = interleaveCaptures(captures);
     expect(result).toHaveLength(3);
     expect(result.map((c) => c.name)).toEqual([
       'variable',
@@ -42,43 +47,44 @@ describe('deduplicateCaptures', () => {
   });
 
   it('keeps the last capture when two patterns match the same node', () => {
-    // Simulates: (identifier) @variable then (call name: (identifier) @function)
-    // Both match the same node — @function (later pattern) should win
+    const sharedId = nodeId++;
     const captures = [
-      mockCapture('variable', 0, 42, 0, 5),
-      mockCapture('function', 1, 42, 0, 5),
+      mockLayered('variable', 0, 0, 5, 0, sharedId),
+      mockLayered('function', 1, 0, 5, 0, sharedId),
     ];
 
-    const result = deduplicateCaptures(captures);
+    const result = interleaveCaptures(captures);
     expect(result).toHaveLength(1);
     expect(result[0].name).toBe('function');
   });
 
   it('keeps the last capture when three patterns match the same node', () => {
+    const sharedId = nodeId++;
     const captures = [
-      mockCapture('variable', 0, 10, 0, 8),
-      mockCapture('function', 1, 10, 0, 8),
-      mockCapture('function.builtin', 2, 10, 0, 8),
+      mockLayered('variable', 0, 0, 8, 0, sharedId),
+      mockLayered('function', 1, 0, 8, 0, sharedId),
+      mockLayered('function.builtin', 2, 0, 8, 0, sharedId),
     ];
 
-    const result = deduplicateCaptures(captures);
+    const result = interleaveCaptures(captures);
+
     expect(result).toHaveLength(1);
     expect(result[0].name).toBe('function.builtin');
   });
 
-  it('deduplicates each group independently when multiple nodes have duplicates', () => {
+  it('deduplicates each node independently', () => {
+    const nodeA = nodeId++;
+    const nodeB = nodeId++;
     const captures = [
-      // Node A: "let" — keyword wins over variable
-      mockCapture('variable', 0, 1, 0, 3),
-      mockCapture('keyword', 1, 1, 0, 3),
-      // Node B: "foo" — function wins over variable
-      mockCapture('variable', 0, 2, 4, 7),
-      mockCapture('function', 1, 2, 4, 7),
-      // Node C: "bar" — no duplicate, stays as-is
-      mockCapture('string', 2, 3, 10, 15),
+      mockLayered('variable', 0, 0, 3, 0, nodeA),
+      mockLayered('keyword', 1, 0, 3, 0, nodeA),
+      mockLayered('variable', 0, 4, 7, 0, nodeB),
+      mockLayered('function', 1, 4, 7, 0, nodeB),
+      mockLayered('string', 2, 10, 15),
     ];
 
-    const result = deduplicateCaptures(captures);
+    const result = interleaveCaptures(captures);
+
     expect(result).toHaveLength(3);
     expect(result.map((c) => c.name)).toEqual([
       'keyword',
@@ -87,22 +93,250 @@ describe('deduplicateCaptures', () => {
     ]);
   });
 
-  it('does not merge captures for different nodes at the same position', () => {
-    // Two different nodes that happen to span the same range
-    // (different node IDs) should both be kept
+  it('deeper layer wins when captures cover the same byte range', () => {
+    // Host layer (depth 0) and injected layer (depth 1) both highlight
+    // the same byte range — injected should win
     const captures = [
-      mockCapture('type', 0, 100, 0, 5),
-      mockCapture('variable', 1, 200, 0, 5),
+      mockLayered('variable', 0, 10, 20, 0),
+      mockLayered('keyword', 0, 10, 20, 1),
     ];
 
-    const result = deduplicateCaptures(captures);
-    expect(result).toHaveLength(2);
+    const result = interleaveCaptures(captures);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('keyword');
+  });
+
+  it('keeps both captures when same-range from same depth', () => {
+    // Two different nodes at the same range, same depth — both kept
+    // because they have different node IDs (different queries matched
+    // different subtrees)
+    const captures = [
+      mockLayered('type', 0, 0, 5, 0),
+      mockLayered('variable', 1, 0, 5, 0),
+    ];
+
+    // After node dedup (different IDs, both survive), then range dedup
+    // picks the one with higher patternIndex (or either, since same depth)
+    const result = interleaveCaptures(captures);
+
+    // Only one should survive the range dedup since they cover the same range
+    expect(result).toHaveLength(1);
+  });
+
+  it('sorts by startIndex ascending', () => {
+    const captures = [
+      mockLayered('string', 0, 10, 20),
+      mockLayered('keyword', 0, 0, 5),
+      mockLayered('variable', 0, 5, 10),
+    ];
+
+    const result = interleaveCaptures(captures);
+    expect(result.map((c) => c.name)).toEqual([
+      'keyword',
+      'variable',
+      'string',
+    ]);
+  });
+
+  it('sorts by endIndex descending (wider spans first) at same start', () => {
+    // A parent span [0..20] should come before a child span [0..10]
+    // so the parent opens first and wraps the child
+    const captures = [
+      mockLayered('function.call', 0, 0, 10),
+      mockLayered('function', 0, 0, 20),
+    ];
+
+    const result = interleaveCaptures(captures);
+    expect(result.map((c) => c.name)).toEqual(['function', 'function.call']);
+  });
+
+  it('interleaves captures from multiple layers correctly', () => {
+    // Host layer: keyword at [0..3], variable at [4..8]
+    // Injected layer: function at [10..15], string at [16..20]
+    const captures = [
+      mockLayered('keyword', 0, 0, 3, 0),
+      mockLayered('variable', 0, 4, 8, 0),
+      mockLayered('function', 0, 10, 15, 1),
+      mockLayered('string', 0, 16, 20, 1),
+    ];
+
+    const result = interleaveCaptures(captures);
+
+    expect(result).toHaveLength(4);
+    expect(result.map((c) => c.name)).toEqual([
+      'keyword',
+      'variable',
+      'function',
+      'string',
+    ]);
   });
 
   it('handles a single capture', () => {
-    const captures = [mockCapture('keyword', 0, 1, 0, 3)];
-    const result = deduplicateCaptures(captures);
+    const captures = [mockLayered('keyword', 0, 0, 3)];
+    const result = interleaveCaptures(captures);
+
     expect(result).toHaveLength(1);
     expect(result[0].name).toBe('keyword');
+  });
+
+  it('keeps both when host and injected captures have different ranges', () => {
+    // Host has a wide span [0..20], injected has a narrow span [5..10]
+    // inside it. Different byte ranges, so both survive.
+    const captures = [
+      mockLayered('function', 0, 0, 20, 0),
+      mockLayered('keyword', 0, 5, 10, 1),
+    ];
+
+    const result = interleaveCaptures(captures);
+
+    expect(result).toHaveLength(2);
+
+    // Wider span first (endIndex desc at same start? No, different starts)
+    // startIndex asc: function[0] before keyword[5]
+    expect(result.map((c) => c.name)).toEqual(['function', 'keyword']);
+  });
+
+  it('nests injected capture inside host capture at same start', () => {
+    // Host: [0..30] wraps the whole region
+    // Injected: [0..15] is a subset starting at the same byte
+    // Sort: wider first (endIndex desc), so host wraps injected
+    const captures = [
+      mockLayered('tag', 0, 0, 30, 0),
+      mockLayered('keyword', 0, 0, 15, 1),
+    ];
+
+    const result = interleaveCaptures(captures);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].name).toBe('tag');
+    expect(result[1].name).toBe('keyword');
+  });
+
+  it('handles three layers with depth priority at same range', () => {
+    // Host, injected, and nested-injected all produce a capture
+    // at the same byte range — deepest wins
+    const captures = [
+      mockLayered('variable', 0, 10, 20, 0),
+      mockLayered('property', 0, 10, 20, 1),
+      mockLayered('keyword', 0, 10, 20, 2),
+    ];
+
+    const result = interleaveCaptures(captures);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('keyword'); // depth 2 wins
+  });
+
+  it('keeps captures from all three layers at different ranges', () => {
+    const captures = [
+      mockLayered('tag', 0, 0, 50, 0), // host
+      mockLayered('keyword', 0, 10, 20, 1), // injected
+      mockLayered('string', 0, 12, 18, 2), // nested injected
+    ];
+
+    const result = interleaveCaptures(captures);
+    expect(result).toHaveLength(3);
+    expect(result.map((c) => c.name)).toEqual(['tag', 'keyword', 'string']);
+  });
+
+  it('preserves adjacent captures from different layers without gaps', () => {
+    // Host ends at byte 10, injected starts at byte 10
+    const captures = [
+      mockLayered('keyword', 0, 0, 10, 0),
+      mockLayered('string', 0, 10, 20, 1),
+    ];
+
+    const result = interleaveCaptures(captures);
+    expect(result).toHaveLength(2);
+    expect(result[0].name).toBe('keyword');
+    expect(result[0].node.endIndex).toBe(10);
+    expect(result[1].name).toBe('string');
+    expect(result[1].node.startIndex).toBe(10);
+  });
+
+  it('correctly orders interleaved captures from host and injected layers', () => {
+    // Host:     [0..5]           [15..20]
+    // Injected:        [5..15]
+    const captures = [
+      mockLayered('keyword', 0, 0, 5, 0),
+      mockLayered('variable', 0, 15, 20, 0),
+      mockLayered('string', 0, 5, 15, 1),
+    ];
+
+    const result = interleaveCaptures(captures);
+    expect(result).toHaveLength(3);
+    expect(result.map((c) => c.name)).toEqual([
+      'keyword',
+      'string',
+      'variable',
+    ]);
+  });
+
+  it('keeps all captures from an injected layer at different ranges', () => {
+    const captures = [
+      mockLayered('tag', 0, 0, 50, 0), // host wrapper
+      mockLayered('keyword', 0, 5, 10, 1), // injected
+      mockLayered('variable', 0, 11, 18, 1), // injected
+      mockLayered('function', 0, 20, 30, 1), // injected
+      mockLayered('string', 0, 32, 45, 1), // injected
+    ];
+
+    const result = interleaveCaptures(captures);
+
+    expect(result).toHaveLength(5);
+
+    // All should survive — different byte ranges
+    expect(result.map((c) => c.name)).toEqual([
+      'tag',
+      'keyword',
+      'variable',
+      'function',
+      'string',
+    ]);
+  });
+
+  it('handles HTML + CSS injection scenario', () => {
+    // Host (HTML):
+    //   <style> tag at [0..50] — captured as "tag"
+    //   tag name "style" at [1..6] — captured as "tag.builtin"
+    //   ">" at [6..7] — captured as "tag.delimiter"
+    //   "</style>" at [40..50] — captured as "tag"
+    //
+    // Injected (CSS, depth 1):
+    //   ".foo" at [7..11] — captured as "tag" (CSS selector)
+    //   "{" at [12..13] — captured as "punctuation.bracket"
+    //   "color" at [14..19] — captured as "property"
+    //   "red" at [21..24] — captured as "constant"
+    //   "}" at [25..26] — captured as "punctuation.bracket"
+    const captures = [
+      mockLayered('tag', 0, 0, 50, 0),
+      mockLayered('tag.builtin', 1, 1, 6, 0),
+      mockLayered('tag.delimiter', 0, 6, 7, 0),
+      mockLayered('tag', 0, 40, 50, 0),
+      mockLayered('tag', 0, 7, 11, 1),
+      mockLayered('punctuation.bracket', 0, 12, 13, 1),
+      mockLayered('property', 0, 14, 19, 1),
+      mockLayered('constant', 0, 21, 24, 1),
+      mockLayered('punctuation.bracket', 0, 25, 26, 1),
+    ];
+
+    const result = interleaveCaptures(captures);
+
+    // All captures are at different byte ranges — all should survive
+    // Sort: startIndex asc, endIndex desc at same start
+    expect(
+      result.map((c) => [c.name, c.node.startIndex, c.node.endIndex]),
+    ).toEqual([
+      ['tag', 0, 50], // widest first
+      ['tag.builtin', 1, 6],
+      ['tag.delimiter', 6, 7],
+      ['tag', 7, 11], // CSS selector
+      ['punctuation.bracket', 12, 13],
+      ['property', 14, 19],
+      ['constant', 21, 24],
+      ['punctuation.bracket', 25, 26],
+      ['tag', 40, 50], // closing tag
+    ]);
   });
 });

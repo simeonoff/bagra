@@ -1,10 +1,9 @@
-import { resolve } from 'node:path';
+import { grammar, query } from '@bagrajs/test-utils';
 import { describe, expect, it, vi } from 'vitest';
 import { createHighlighter } from '@/highlighter';
 
-const FIXTURES = resolve(__dirname, '../../../internal/test-utils/fixtures');
-const GRAMMAR_PATH = resolve(FIXTURES, 'tree-sitter-scss.wasm');
-const HIGHLIGHTS_PATH = resolve(FIXTURES, 'scss-highlights.scm');
+const GRAMMAR_PATH = grammar('scss');
+const HIGHLIGHTS_PATH = query('scss', 'highlights');
 
 describe('error: unloaded language', () => {
   it('throws when calling codeToHtml with an unloaded language', async () => {

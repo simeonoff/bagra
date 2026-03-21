@@ -1,13 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createHighlighter as createFromCore } from '@bagrajs/core';
+import { grammar, query } from '@bagrajs/test-utils';
 import { wasmBinary } from '@bagrajs/wasm';
 import { createHighlighter as createFromWeb } from '@bagrajs/web';
 import { describe, expect, it } from 'vitest';
 
-const FIXTURES = resolve(__dirname, '../internal/test-utils/fixtures');
-const GRAMMAR_PATH = resolve(FIXTURES, 'tree-sitter-scss.wasm');
-const HIGHLIGHTS_PATH = resolve(FIXTURES, 'scss-highlights.scm');
+const GRAMMAR_PATH = grammar('scss');
+const HIGHLIGHTS_PATH = query('scss', 'highlights');
 
 describe('web entry point (@bagrajs/web)', () => {
   it('exports createHighlighter that works with highlights as a path', async () => {

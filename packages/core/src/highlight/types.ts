@@ -1,3 +1,16 @@
+import type { QueryCapture } from 'web-tree-sitter';
+
+/**
+ * A capture tagged with its injection depth.
+ *
+ * Depth 0 is the host layer. Each level of injection increments depth.
+ * At the same byte range, deeper layers take priority.
+ */
+export interface LayeredCapture {
+  capture: QueryCapture;
+  depth: number;
+}
+
 /**
  * Event types in the highlight event stream.
  *

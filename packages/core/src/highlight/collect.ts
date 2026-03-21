@@ -1,9 +1,9 @@
-import type { QueryCapture, Tree } from 'web-tree-sitter';
+import type { QueryCapture, Range, Tree } from 'web-tree-sitter';
 import type { HighlightContext } from '@/highlight';
-import { deduplicateCaptures } from '@/highlight/deduplicate';
-import { adjustCaptures } from '@/injection/adjust';
-import { buildInjectionText } from '@/injection/extract';
+import { interleaveCaptures } from '@/highlight/deduplicate';
+import type { LayeredCapture } from '@/highlight/types';
 import { type InjectionDescriptor, parseInjections } from '@/injection/parse';
+import { FULL_DOCUMENT_RANGE, intersectRanges } from '@/injection/ranges';
 
 /** Intermediate result that keeps trees alive alongside their captures. */
 export interface CaptureResult {
@@ -11,15 +11,16 @@ export interface CaptureResult {
   trees: Tree[];
 }
 
-const EMPTY_RESULT: CaptureResult = { captures: [], trees: [] };
+/** Internal result type used during recursive collection. */
+interface LayeredResult {
+  captures: LayeredCapture[];
+  trees: Tree[];
+}
+
+const EMPTY_RESULT: LayeredResult = { captures: [], trees: [] };
 
 /**
  * Build a cycle-detection key for an injection site.
- *
- * The key encodes the language and the byte range being injected.
- * If the same key appears twice in the recursion path, we have a
- * cycle (e.g. SCSS -> SassDoc -> SCSS at the same range) and should
- * stop recursing.
  */
 function injectionKey(
   lang: string,
@@ -33,20 +34,19 @@ function injectionKey(
  * Collect all highlight captures for `code` in the given language,
  * including captures from any injected languages (recursively).
  *
- * Captures from injected languages have their byte positions
- * adjusted back to the parent document's coordinate space before
- * being merged.
+ * Uses `parser.parse()` with `includedRanges` for injections, so
+ * the injected parser operates on the original source text at the
+ * correct byte offsets. Captures from injected layers need no
+ * offset adjustment — they're already in the parent document's
+ * coordinate space.
  *
  * Recursion is guarded by cycle detection: a shared `seen` set tracks
  * which `language:range` combinations are already on the call stack.
- * If an injection would re-enter a combination that is already being
- * processed, it is skipped.
  *
  * **Important**: The returned captures reference tree-sitter nodes
  * that are only valid while their tree is alive. The caller must
  * consume the captures (via {@link generateEvents}) before deleting
- * the trees. This function returns both so the caller can manage
- * their lifetime.
+ * the trees.
  *
  * @param ctx - The shared parser and language registry.
  * @param lang - The top-level language to highlight.
@@ -60,29 +60,38 @@ export function collectCaptures(
   const seen = new Set<string>();
 
   /**
-   * Recursively collect captures for a language, resolving injections
-   * depth-first.
+   * Recursively collect captures for a language layer.
    */
   function collect(
     currentLang: string,
-    source: string,
+    parentRanges: Range[],
+    depth: number,
     parentLang?: string,
-  ): CaptureResult {
+  ): LayeredResult {
     const loaded = ctx.languages.get(currentLang);
 
     if (!loaded) return EMPTY_RESULT;
 
     ctx.parser.setLanguage(loaded.language);
-    const tree = ctx.parser.parse(source);
+
+    const tree = ctx.parser.parse(code, null, {
+      includedRanges: parentRanges,
+    });
 
     if (!tree) return EMPTY_RESULT;
 
     const trees: Tree[] = [tree];
 
     const highlightsQuery = loaded.queries.get('highlights');
-    const captures = highlightsQuery
+    const rawCaptures = highlightsQuery
       ? highlightsQuery.captures(tree.rootNode)
       : [];
+
+    // Tag each capture with its depth
+    const captures: LayeredCapture[] = rawCaptures.map((capture) => ({
+      capture,
+      depth,
+    }));
 
     const injectionsQuery = loaded.queries.get('injections');
 
@@ -91,30 +100,32 @@ export function collectCaptures(
       const descriptors = parseInjections(matches, currentLang, parentLang);
 
       for (const descriptor of descriptors) {
-        const injected = resolveInjection(descriptor, source, currentLang);
+        const injected = resolveInjection(
+          descriptor,
+          parentRanges,
+          depth,
+          currentLang,
+        );
+
         captures.push(...injected.captures);
         trees.push(...injected.trees);
       }
     }
 
-    return { captures: deduplicateCaptures(captures), trees };
+    return { captures, trees };
   }
 
   /**
    * Resolve captures for a single injection descriptor.
-   *
-   * Extracts the injected text, parses it with the injected language,
-   * recurses via {@link collect}, and adjusts byte positions back to
-   * the parent document's coordinate space.
    */
   function resolveInjection(
     descriptor: InjectionDescriptor,
-    source: string,
+    parentRanges: Range[],
+    depth: number,
     parentLang: string,
-  ): CaptureResult {
+  ): LayeredResult {
     if (!ctx.languages.has(descriptor.language)) return EMPTY_RESULT;
 
-    // Cycle detection: skip if we've already seen this language at this range
     const firstRange = descriptor.ranges.at(0)!;
     const lastRange = descriptor.ranges.at(-1)!;
 
@@ -127,23 +138,32 @@ export function collectCaptures(
     if (seen.has(key)) return EMPTY_RESULT;
     seen.add(key);
 
-    const { text, mappings } = buildInjectionText(
-      descriptor.ranges,
+    const contentNodes = descriptor.ranges.map((r) => r.node);
+    const includedRanges = intersectRanges(
+      parentRanges,
+      contentNodes,
       descriptor.includeChildren,
-      source,
     );
 
-    if (!text) {
+    if (includedRanges.length === 0) {
       seen.delete(key);
+
       return EMPTY_RESULT;
     }
 
-    const { captures, trees } = collect(descriptor.language, text, parentLang);
+    const result = collect(
+      descriptor.language,
+      includedRanges,
+      depth + 1,
+      parentLang,
+    );
 
     seen.delete(key);
 
-    return { captures: adjustCaptures(captures, mappings), trees };
+    return result;
   }
 
-  return collect(lang, code);
+  const { captures, trees } = collect(lang, [FULL_DOCUMENT_RANGE], 0);
+
+  return { captures: interleaveCaptures(captures), trees };
 }
