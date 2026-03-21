@@ -12,21 +12,25 @@ describe('HTML + CSS + JS injection', () => {
       languages: {
         html: {
           grammar: grammar('html'),
-          highlights: query('html', 'highlights'),
-          injections: query('html', 'injections'),
+          queries: {
+            highlights: query('html', 'highlights'),
+            injections: query('html', 'injections'),
+          },
         },
         css: {
           grammar: grammar('css'),
-          highlights: query('css', 'highlights'),
+          queries: { highlights: query('css', 'highlights') },
         },
         javascript: {
           grammar: grammar('javascript'),
-          highlights: query('javascript', 'highlights'),
-          injections: query('javascript', 'injections'),
+          queries: {
+            highlights: query('javascript', 'highlights'),
+            injections: query('javascript', 'injections'),
+          },
         },
         jsdoc: {
           grammar: grammar('jsdoc'),
-          highlights: query('jsdoc', 'highlights'),
+          queries: { highlights: query('jsdoc', 'highlights') },
         },
       },
     });
@@ -112,17 +116,21 @@ describe('SCSS + SassDoc injection', () => {
       languages: {
         scss: {
           grammar: grammar('scss'),
-          highlights: query('scss', 'highlights'),
-          injections: query('scss', 'injections'),
+          queries: {
+            highlights: query('scss', 'highlights'),
+            injections: query('scss', 'injections'),
+          },
         },
         sassdoc: {
           grammar: grammar('sassdoc'),
-          highlights: query('sassdoc', 'highlights'),
-          injections: query('sassdoc', 'injections'),
+          queries: {
+            highlights: query('sassdoc', 'highlights'),
+            injections: query('sassdoc', 'injections'),
+          },
         },
         css: {
           grammar: grammar('css'),
-          highlights: query('css', 'highlights'),
+          queries: { highlights: query('css', 'highlights') },
         },
       },
     });
@@ -211,12 +219,14 @@ describe('JavaScript + JSDoc injection', () => {
       languages: {
         javascript: {
           grammar: grammar('javascript'),
-          highlights: query('javascript', 'highlights'),
-          injections: query('javascript', 'injections'),
+          queries: {
+            highlights: query('javascript', 'highlights'),
+            injections: query('javascript', 'injections'),
+          },
         },
         jsdoc: {
           grammar: grammar('jsdoc'),
-          highlights: query('jsdoc', 'highlights'),
+          queries: { highlights: query('jsdoc', 'highlights') },
         },
       },
     });
@@ -296,20 +306,24 @@ describe('TypeScript with ecma inheritance', () => {
       languages: {
         typescript: {
           grammar: grammar('typescript'),
-          highlights: query('typescript', 'highlights'),
-          injections: query('typescript', 'injections'),
+          queries: {
+            highlights: query('typescript', 'highlights'),
+            injections: query('typescript', 'injections'),
+          },
         },
         // ecma is query-only — no grammar, but its queries are needed
         // for inheritance resolution. We provide them as language
         // definitions that TypeScript's modeline can resolve from.
         ecma: {
           grammar: grammar('javascript'), // use JS grammar as stand-in
-          highlights: { content: ecmaHighlights },
-          injections: { content: ecmaInjections },
+          queries: {
+            highlights: { content: ecmaHighlights },
+            injections: { content: ecmaInjections },
+          },
         },
         jsdoc: {
           grammar: grammar('jsdoc'),
-          highlights: query('jsdoc', 'highlights'),
+          queries: { highlights: query('jsdoc', 'highlights') },
         },
       },
     });

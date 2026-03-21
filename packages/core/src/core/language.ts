@@ -43,7 +43,7 @@ async function resolveQueryWithInheritance(
     if (seen.has(language)) continue;
 
     const parentDef = definitions[language];
-    const parentQuery = parentDef?.[queryType];
+    const parentQuery = parentDef?.queries?.[queryType];
 
     if (!parentQuery && !optional) {
       console.warn(
@@ -78,8 +78,7 @@ async function resolveQueryWithInheritance(
 /**
  * Load a single language definition into a tree-sitter Language + Query pair.
  *
- * Resolves the highlights query from a file path/URL if a string is provided,
- * or uses the content directly if `{ content: string }` is provided.
+ * Resolves query files from paths/URLs or uses content directly.
  *
  * When a query contains `; inherits:` modeline directives, the inherited
  * queries are automatically resolved from `definitions` and prepended.
@@ -100,10 +99,10 @@ export async function initLanguage(
 
   await Promise.all(
     queryTypes
-      .filter((type) => definition[type] != null)
+      .filter((type) => definition.queries?.[type] != null)
       .map(async (type) => {
         const content = await resolveQueryWithInheritance(
-          definition[type]!,
+          definition.queries![type]!,
           type,
           definitions,
         );

@@ -13,7 +13,10 @@ describe('web entry point (@bagrajs/web)', () => {
   it('exports createHighlighter that works with highlights as a path', async () => {
     const hl = await createFromWeb({
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
 
@@ -42,7 +45,10 @@ describe('core entry point (@bagrajs/core)', () => {
     const hl = await createFromCore({
       wasmBinary: wasmBuffer,
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
 
@@ -63,7 +69,10 @@ describe('core entry point (@bagrajs/core)', () => {
         buffer.byteOffset + buffer.byteLength,
       ),
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
 
@@ -93,7 +102,10 @@ describe('wasm entry point (@bagrajs/wasm)', () => {
     const hl = await createFromCore({
       wasmBinary,
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
 
@@ -110,14 +122,20 @@ describe('output consistency across entry points', () => {
 
     const hlWeb = await createFromWeb({
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
 
     const hlCore = await createFromCore({
       wasmBinary,
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
 
@@ -135,14 +153,20 @@ describe('output consistency across entry points', () => {
 
     const hlWeb = await createFromWeb({
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
 
     const hlCore = await createFromCore({
       wasmBinary,
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
 

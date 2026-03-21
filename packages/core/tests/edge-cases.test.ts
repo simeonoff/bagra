@@ -11,7 +11,7 @@ describe('edge cases', () => {
       languages: {
         scss: {
           grammar: grammar('scss'),
-          highlights: query('scss', 'highlights'),
+          queries: { highlights: query('scss', 'highlights') },
         },
       },
     });

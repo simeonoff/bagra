@@ -13,7 +13,9 @@
  *   languages: {
  *     scss: {
  *       grammar: '/grammars/tree-sitter-scss.wasm',
- *       highlights: scssHighlightsScm,
+ *       queries: {
+ *         highlights: scssHighlightsScm,
+ *       },
  *     },
  *   },
  * });

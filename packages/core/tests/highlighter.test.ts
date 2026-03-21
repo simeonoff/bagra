@@ -31,7 +31,10 @@ describe('createHighlighter', () => {
   it('creates a highlighter with highlights as a file path', async () => {
     hl = await createHighlighter({
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
 
@@ -48,7 +51,7 @@ describe('createHighlighter', () => {
       languages: {
         scss: {
           grammar: GRAMMAR_PATH,
-          highlights: { content: highlightsScm },
+          queries: { highlights: { content: highlightsScm } },
         },
       },
     });
@@ -63,7 +66,7 @@ describe('createHighlighter', () => {
 
     await hl.loadLanguage('scss', {
       grammar: GRAMMAR_PATH,
-      highlights: HIGHLIGHTS_PATH,
+      queries: { highlights: HIGHLIGHTS_PATH },
     });
 
     expect(hl.hasLanguage('scss')).toBe(true);
@@ -75,7 +78,7 @@ describe('createHighlighter', () => {
 
     await hl.loadLanguage('scss', {
       grammar: GRAMMAR_PATH,
-      highlights: { content: highlightsScm },
+      queries: { highlights: { content: highlightsScm } },
     });
 
     expect(hl.hasLanguage('scss')).toBe(true);
@@ -88,7 +91,7 @@ describe('createHighlighter', () => {
       languages: {
         scss: {
           grammar: new Uint8Array(grammarBytes),
-          highlights: { content: highlightsScm },
+          queries: { highlights: { content: highlightsScm } },
         },
       },
     });
@@ -101,7 +104,10 @@ describe('createHighlighter', () => {
   it('produces identical output with path vs { content }', async () => {
     const hlPath = await createHighlighter({
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
 
@@ -109,7 +115,7 @@ describe('createHighlighter', () => {
       languages: {
         scss: {
           grammar: GRAMMAR_PATH,
-          highlights: { content: highlightsScm },
+          queries: { highlights: { content: highlightsScm } },
         },
       },
     });
@@ -130,7 +136,10 @@ describe('codeToHtml', () => {
   beforeAll(async () => {
     hl = await createHighlighter({
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
   });
@@ -210,7 +219,10 @@ describe('codeToTokens', () => {
   beforeAll(async () => {
     hl = await createHighlighter({
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
   });
@@ -276,7 +288,10 @@ describe('codeToHast', () => {
   beforeAll(async () => {
     hl = await createHighlighter({
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
   });

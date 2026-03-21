@@ -1,6 +1,24 @@
 export type QueryContent = string | { content: string };
 
 /**
+ * Tree-sitter query definitions for a language.
+ *
+ * Each query is optional. Values can be:
+ * - `string` — URL (browser) or file path (Node.js) to a `.scm` file
+ * - `{ content: string }` — pre-loaded query text content
+ *
+ * When a string path is provided, the library resolves it automatically:
+ * HTTP/HTTPS URLs use `fetch()`, file paths use `node:fs/promises` with
+ * a `fetch()` fallback for runtimes without filesystem access.
+ */
+export interface LanguageQueries {
+  /** The tree-sitter highlights query for syntax highlighting. */
+  highlights?: QueryContent;
+  /** The tree-sitter injections query for language injection. */
+  injections?: QueryContent;
+}
+
+/**
  * Definition for a language that can be loaded into the highlighter.
  */
 export interface LanguageDefinition {
@@ -13,26 +31,9 @@ export interface LanguageDefinition {
   grammar: string | Uint8Array;
 
   /**
-   * The tree-sitter highlights query for this language.
+   * Tree-sitter queries for this language.
    *
-   * - `string` — URL (browser) or file path (Node.js) to a `.scm` file
-   * - `{ content: string }` — pre-loaded query text content
-   *
-   * When a string path is provided, the library resolves it automatically:
-   * HTTP/HTTPS URLs use `fetch()`, file paths use `node:fs/promises` with
-   * a `fetch()` fallback for runtimes without filesystem access.
+   * @see {@link LanguageQueries}
    */
-  highlights?: QueryContent;
-
-  /**
-   * The tree-sitter injections query for this language.
-   *
-   * - `string` — URL (browser) or file path (Node.js) to a `.scm` file
-   * - `{ content: string }` — pre-loaded query text content
-   *
-   * When a string path is provided, the library resolves it automatically:
-   * HTTP/HTTPS URLs use `fetch()`, file paths use `node:fs/promises` with
-   * a `fetch()` fallback for runtimes without filesystem access.
-   */
-  injections?: QueryContent;
+  queries?: LanguageQueries;
 }

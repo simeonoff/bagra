@@ -51,7 +51,10 @@ describe('error: disposed highlighter', () => {
   it('throws when calling codeToHtml after dispose', async () => {
     const hl = await createHighlighter({
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
 
@@ -63,7 +66,10 @@ describe('error: disposed highlighter', () => {
   it('throws when calling codeToTokens after dispose', async () => {
     const hl = await createHighlighter({
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
 
@@ -75,7 +81,10 @@ describe('error: disposed highlighter', () => {
   it('throws when calling codeToHast after dispose', async () => {
     const hl = await createHighlighter({
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
 
@@ -91,7 +100,7 @@ describe('error: disposed highlighter', () => {
     await expect(
       hl.loadLanguage('scss', {
         grammar: GRAMMAR_PATH,
-        highlights: HIGHLIGHTS_PATH,
+        queries: { highlights: HIGHLIGHTS_PATH },
       }),
     ).rejects.toThrow(/disposed/);
   });
@@ -110,7 +119,7 @@ describe('error: invalid grammar', () => {
     await expect(
       hl.loadLanguage('fake', {
         grammar: '/nonexistent/path/fake.wasm',
-        highlights: { content: '(identifier) @variable' },
+        queries: { highlights: { content: '(identifier) @variable' } },
       }),
     ).rejects.toThrow();
 
@@ -123,7 +132,7 @@ describe('error: invalid grammar', () => {
     await expect(
       hl.loadLanguage('fake', {
         grammar: new Uint8Array([0, 1, 2, 3, 4, 5]),
-        highlights: { content: '(identifier) @variable' },
+        queries: { highlights: { content: '(identifier) @variable' } },
       }),
     ).rejects.toThrow();
 
@@ -143,7 +152,7 @@ describe('error: invalid highlights query', () => {
     await expect(
       hl.loadLanguage('scss', {
         grammar: GRAMMAR_PATH,
-        highlights: { content: '((((invalid query syntax' },
+        queries: { highlights: { content: '((((invalid query syntax' } },
       }),
     ).rejects.toThrow();
 
@@ -156,7 +165,7 @@ describe('error: invalid highlights query', () => {
     await expect(
       hl.loadLanguage('scss', {
         grammar: GRAMMAR_PATH,
-        highlights: '/nonexistent/path/highlights.scm',
+        queries: { highlights: '/nonexistent/path/highlights.scm' },
       }),
     ).rejects.toThrow();
 

@@ -5,7 +5,11 @@ import type { Token } from '@/renderers/types';
 import type { BagraTheme } from '@/theme';
 
 // Re-export types from their domain modules for public API consumers
-export type { LanguageDefinition, QueryContent } from '@/core/types';
+export type {
+  LanguageDefinition,
+  LanguageQueries,
+  QueryContent,
+} from '@/core/types';
 export type { HighlightEvent } from '@/highlight/types';
 
 /**
@@ -78,7 +82,9 @@ export interface HighlighterOptions {
    * {
    *   scss: {
    *     grammar: '/grammars/tree-sitter-scss.wasm',
-   *     highlights: '/grammars/scss-highlights.scm',
+   *     queries: {
+   *       highlights: '/grammars/scss-highlights.scm',
+   *     },
    *   },
    * }
    * ```

@@ -54,7 +54,9 @@ async function initParser(
  *   languages: {
  *     scss: {
  *       grammar: '/grammars/tree-sitter-scss.wasm',
- *       highlights: '/grammars/scss-highlights.scm',
+ *       queries: {
+ *         highlights: '/grammars/scss-highlights.scm',
+ *       },
  *     },
  *   },
  * });
