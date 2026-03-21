@@ -136,7 +136,7 @@ describe('parseInjections', () => {
     expect(result[0].language).toBe('scss');
   });
 
-  it('static setProperties language takes priority over dynamic capture', () => {
+  it('dynamic capture takes priority over static setProperties language', () => {
     const langNode = mockNode(0, 6, 'python');
     const contentNode = mockNode(10, 30, 'console.log("hi")');
 
@@ -146,6 +146,22 @@ describe('parseInjections', () => {
           { name: INJECTION.LANGUAGE, node: langNode },
           { name: INJECTION.CONTENT, node: contentNode },
         ],
+        setProperties: { [INJECTION.LANGUAGE]: 'javascript' },
+      }),
+    ];
+
+    const result = parseInjections(matches, 'html');
+
+    expect(result).toHaveLength(1);
+    expect(result[0].language).toBe('python');
+  });
+
+  it('falls back to static setProperties when no capture is present', () => {
+    const contentNode = mockNode(10, 30, 'console.log("hi")');
+
+    const matches = [
+      mockMatch({
+        captures: [{ name: INJECTION.CONTENT, node: contentNode }],
         setProperties: { [INJECTION.LANGUAGE]: 'javascript' },
       }),
     ];

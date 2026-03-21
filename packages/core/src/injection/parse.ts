@@ -65,34 +65,85 @@ export interface InjectionDescriptor {
 /**
  * Resolve the injection language from a match.
  *
- * Priority order (first match wins):
- * 1. `#set! injection.language` property — hard-coded language name
- * 2. `@injection.language` capture — dynamic, read from source text
+ * Priority order matches the Rust tree-sitter-highlight crate
+ * (`injection_for_match` in `highlight.rs`):
+ *
+ * 1. `@injection.language` capture — dynamic, read from source text
+ * 2. `#set! injection.language` property — hard-coded language name
  * 3. `#set! injection.self` property — re-parse with the current language
+ * 4. `#set! injection.parent` property — re-parse with the parent language
  *
  * @returns The resolved language name, or `undefined` if none could be determined.
  */
 function resolveLanguage(
-  setProperties: QueryMatch['setProperties'],
   languageCapture: QueryCapture | undefined,
+  setProperties: QueryMatch['setProperties'],
   currentLanguage: string,
+  parentLanguage?: string,
 ): string | undefined {
-  const staticLang = setProperties?.[INJECTION.LANGUAGE];
-
-  if (staticLang) {
-    return staticLang;
-  }
-
+  // 1. Dynamic language from @injection.language capture
   if (languageCapture) {
     const text = languageCapture.node.text.trim();
     if (text) return text;
   }
 
+  // 2. Static language from #set! injection.language
+  const staticLang = setProperties?.[INJECTION.LANGUAGE];
+  if (staticLang) return staticLang;
+
+  // 3. injection.self — re-parse with the same language
   if (setProperties && INJECTION.SELF in setProperties) {
     return currentLanguage;
   }
 
+  // 4. injection.parent — re-parse with the parent layer's language
+  if (setProperties && INJECTION.PARENT in setProperties) {
+    return parentLanguage;
+  }
+
   return undefined;
+}
+
+/**
+ * Extract injection information from a single query match.
+ *
+ * Mirrors the Rust `injection_for_match` function. Returns the resolved
+ * language name, the content capture nodes, and the `include-children`
+ * / `combined` flags — or `undefined` if the match has no content
+ * captures or no resolvable language.
+ */
+function injectionForMatch(
+  captures: QueryCapture[],
+  setProperties: QueryMatch['setProperties'],
+  currentLanguage: string,
+  parentLanguage?: string,
+) {
+  const contentCaptures = captures.filter((c) => c.name === INJECTION.CONTENT);
+
+  if (contentCaptures.length === 0) return undefined;
+
+  const languageCapture = captures.find((c) => c.name === INJECTION.LANGUAGE);
+
+  const language = resolveLanguage(
+    languageCapture,
+    setProperties,
+    currentLanguage,
+    parentLanguage,
+  );
+
+  if (!language) return undefined;
+
+  const includeChildren =
+    setProperties != null && INJECTION.INCLUDE_CHILDREN in setProperties;
+  const combined = setProperties != null && INJECTION.COMBINED in setProperties;
+
+  const ranges: InjectionRange[] = contentCaptures.map((c) => ({
+    startIndex: c.node.startIndex,
+    endIndex: c.node.endIndex,
+    node: c.node,
+  }));
+
+  return { language, ranges, includeChildren, combined };
 }
 
 /**
@@ -114,6 +165,8 @@ function resolveLanguage(
  * @param matches - Raw query matches from `query.matches(rootNode)`.
  * @param currentLanguage - The language of the current (parent) document,
  *   used to resolve `injection.self`.
+ * @param parentLanguage - The language of the parent layer, used to resolve
+ *   `injection.parent`.
  *
  * @returns An array of injection descriptors, ready for text extraction
  *   and re-parsing.
@@ -121,36 +174,27 @@ function resolveLanguage(
 export function parseInjections(
   matches: QueryMatch[],
   currentLanguage: string,
+  parentLanguage?: string,
 ): InjectionDescriptor[] {
   const descriptors: InjectionDescriptor[] = [];
   const combinedGroups = new Map<string, InjectionDescriptor>();
 
   for (const { captures, setProperties } of matches) {
-    const contentCaptures = captures.filter(
-      (c) => c.name === INJECTION.CONTENT,
-    );
-    const languageCapture = captures.find((c) => c.name === INJECTION.LANGUAGE);
-
-    if (contentCaptures.length === 0) continue;
-
-    const language = resolveLanguage(
+    const injection = injectionForMatch(
+      captures,
       setProperties,
-      languageCapture,
       currentLanguage,
+      parentLanguage,
     );
 
-    if (!language) continue;
+    if (!injection) continue;
 
-    const includeChildren =
-      setProperties != null && INJECTION.INCLUDE_CHILDREN in setProperties;
-    const isCombined =
-      setProperties != null && INJECTION.COMBINED in setProperties;
-
-    const ranges: InjectionRange[] = contentCaptures.map((c) => ({
-      startIndex: c.node.startIndex,
-      endIndex: c.node.endIndex,
-      node: c.node,
-    }));
+    const {
+      language,
+      ranges,
+      includeChildren,
+      combined: isCombined,
+    } = injection;
 
     if (isCombined) {
       const group = getOrCreate(combinedGroups, language, () => ({
