@@ -370,4 +370,96 @@ describe('generateEvents — multi-line', () => {
       lineEnd(),
     ]);
   });
+
+  it('strips \\r before \\n in source text', () => {
+    // "ab\r\ncd" — the \r should be excluded from source events
+    const src = 'ab\r\ncd';
+    const events = generateEvents([], src.length, src);
+
+    expect(events).toEqual([
+      lineStart(),
+      source(0, 2), // "ab" — no \r
+      lineEnd(),
+      lineStart(),
+      source(4, 6), // "cd"
+      lineEnd(),
+    ]);
+  });
+
+  it('strips \\r before \\n inside a highlight span', () => {
+    // "ab\r\ncd" with a highlight covering the full range
+    const src = 'ab\r\ncd';
+    const captures = [mockCapture('keyword', 0, 6)];
+    const events = generateEvents(captures, src.length, src);
+
+    expect(events).toEqual([
+      lineStart(),
+      start('keyword'),
+      source(0, 2), // "ab" — no \r
+      end(),
+      lineEnd(),
+      lineStart(),
+      start('keyword'),
+      source(4, 6), // "cd"
+      end(),
+      lineEnd(),
+    ]);
+  });
+
+  it('handles multiple \\r\\n line endings', () => {
+    const src = 'a\r\nb\r\nc';
+    const events = generateEvents([], src.length, src);
+
+    expect(events).toEqual([
+      lineStart(),
+      source(0, 1), // "a"
+      lineEnd(),
+      lineStart(),
+      source(3, 4), // "b"
+      lineEnd(),
+      lineStart(),
+      source(6, 7), // "c"
+      lineEnd(),
+    ]);
+  });
+
+  it('handles lone \\r without \\n (not stripped)', () => {
+    // A bare \r (no following \n) is not a Windows line ending — keep it
+    const src = 'ab\rcd';
+    const events = generateEvents([], src.length, src);
+
+    // No newline, so single line with \r included in the text
+    expect(events).toEqual([
+      lineStart(),
+      source(0, 5), // "ab\rcd" — all one line
+      lineEnd(),
+    ]);
+  });
+
+  it('handles \\r\\n at the start of source', () => {
+    const src = '\r\nab';
+    const events = generateEvents([], src.length, src);
+
+    expect(events).toEqual([
+      lineStart(),
+      // empty first line — \r stripped, no source before \n
+      lineEnd(),
+      lineStart(),
+      source(2, 4), // "ab"
+      lineEnd(),
+    ]);
+  });
+
+  it('handles \\r\\n at the end of source', () => {
+    const src = 'ab\r\n';
+    const events = generateEvents([], src.length, src);
+
+    expect(events).toEqual([
+      lineStart(),
+      source(0, 2), // "ab"
+      lineEnd(),
+      lineStart(),
+      lineEnd(),
+    ]);
+  });
 });

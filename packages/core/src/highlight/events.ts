@@ -164,12 +164,15 @@ function wrapWithLines(
 
         for (let i = 0; i < text.length; i++) {
           if (text[i] === '\n') {
-            // Emit any source text before this newline
-            if (i > offset) {
+            // Emit any source text before this newline,
+            // excluding a preceding \r (Windows line endings)
+            const lineEnd = i > 0 && text[i - 1] === '\r' ? i - 1 : i;
+
+            if (lineEnd > offset) {
               events.push({
                 type: 'source',
                 start: event.start + offset,
-                end: event.start + i,
+                end: event.start + lineEnd,
               });
             }
 
