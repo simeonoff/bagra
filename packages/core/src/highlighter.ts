@@ -74,10 +74,12 @@ export async function createHighlighter(
   let disposed = false;
 
   if (options.languages) {
-    const entries = Object.entries(options.languages);
+    const definitions = options.languages;
+    const entries = Object.entries(definitions);
+
     const loaded = await Promise.all(
-      entries.map(async ([name, def]) => {
-        const lang = await initLanguage(def);
+      entries.map(async ([name, definition]) => {
+        const lang = await initLanguage(definition, definitions);
         return [name, lang] as const;
       }),
     );
