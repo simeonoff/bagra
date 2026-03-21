@@ -1,5 +1,7 @@
 import type { Root } from 'hast';
 import type { QueryMatch, QueryPredicate } from 'web-tree-sitter';
+import type { LanguageDefinition } from '@/core/types';
+import type { Token } from '@/renderers/types';
 import type { BagraTheme } from '@/theme';
 
 // Re-export types from their domain modules for public API consumers
@@ -81,7 +83,7 @@ export interface HighlighterOptions {
    * }
    * ```
    */
-  languages?: Record<string, import('@/core/types').LanguageDefinition>;
+  languages?: Record<string, LanguageDefinition>;
 
   /**
    * Optional themes to include with the highlighter.
@@ -199,18 +201,12 @@ export interface Highlighter {
    * Highlight source code and return an array of lines, each containing
    * an array of tokens.
    */
-  codeToTokens(
-    lang: string,
-    code: string,
-  ): import('@/renderers/types').Token[][];
+  codeToTokens(lang: string, code: string): Token[][];
 
   /**
    * Load a language after the highlighter has been created.
    */
-  loadLanguage(
-    name: string,
-    definition: import('@/core/types').LanguageDefinition,
-  ): Promise<void>;
+  loadLanguage(name: string, definition: LanguageDefinition): Promise<void>;
 
   /** Check if a language has been loaded. */
   hasLanguage(name: string): boolean;
