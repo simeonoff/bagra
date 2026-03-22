@@ -160,6 +160,8 @@ export function collectCaptures(
     return { captures, trees };
   }
 
+  const warnedLanguages = new Set<string>();
+
   /**
    * Resolve captures for a single injection descriptor.
    */
@@ -170,9 +172,12 @@ export function collectCaptures(
     parentLang: string,
   ): LayeredResult {
     if (!ctx.languages.has(descriptor.language)) {
-      logger.warn(
-        `Injection language "${descriptor.language}" is not loaded. Skipping.`,
-      );
+      if (!warnedLanguages.has(descriptor.language)) {
+        warnedLanguages.add(descriptor.language);
+        logger.warn(
+          `Injection language "${descriptor.language}" is not loaded. Skipping.`,
+        );
+      }
 
       return EMPTY_RESULT;
     }
