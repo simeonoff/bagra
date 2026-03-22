@@ -23,7 +23,9 @@ const hl = await createHighlighter({
   languages: {
     scss: {
       grammar: '/grammars/tree-sitter-scss.wasm',
-      highlights: '/grammars/scss-highlights.scm',
+      queries: {
+        highlights: '/grammars/scss-highlights.scm',
+      },
     },
   },
   themes: [ayuLight, nord],

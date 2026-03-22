@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { renderHtml } from '../../src/renderers/html';
-import type { HighlightEvent } from '../../src/types';
-import { captureToSpanAttrs } from '../../src/utils';
+import { captureToSpanAttrs } from '@/core/utils';
+import { renderHtml } from '@/renderers/html';
+import type { HighlightEvent } from '@/types';
 
 describe('captureToSpanAttrs', () => {
   it('returns only class for a single-segment capture', () => {

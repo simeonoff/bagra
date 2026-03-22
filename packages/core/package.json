@@ -31,8 +31,8 @@
       "default": "./dist/styles.css"
     },
     "./theme": {
-      "types": "./dist/theme.d.ts",
-      "development": "./src/theme.ts",
+      "types": "./dist/theme/index.d.ts",
+      "development": "./src/theme/index.ts",
       "default": "./dist/theme.js"
     }
   },
@@ -46,6 +46,9 @@
     "test": "vitest run"
   },
   "devDependencies": {
+    "@bagrajs/logger": "*",
+    "@bagrajs/test-utils": "*",
+    "@types/hast": "^3.0.4",
     "web-tree-sitter": "^0.26.6"
   }
 }

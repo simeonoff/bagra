@@ -1,159 +1,62 @@
-import { Language, Parser, Query } from 'web-tree-sitter';
-import { deduplicateCaptures } from './pipeline/deduplicate';
-import { generateEvents } from './pipeline/events';
-import { renderHast } from './renderers/hast';
-import { renderHtml } from './renderers/html';
-import { renderTokens } from './renderers/tokens';
-import { resolveHighlights } from './resolve-highlights';
-import type { BagraTheme } from './theme';
-import type {
-  CodeOptions,
-  HastRoot,
-  HighlightEvent,
-  Highlighter,
-  HighlighterOptions,
-  LanguageDefinition,
-  Token,
-} from './types';
+import type { Root } from 'hast';
+import { Parser } from 'web-tree-sitter';
+import { initLanguage, type LoadedLanguage } from '@/core/language';
+import { createRegistries } from '@/core/registry';
+import type { LanguageDefinition } from '@/core/types';
+import { type HighlightContext, highlight } from '@/highlight';
+import type { HighlightEvent } from '@/highlight/types';
+import { renderHast } from '@/renderers/hast';
+import { renderHtml } from '@/renderers/html';
+import { renderTokens } from '@/renderers/tokens';
+import type { Token } from '@/renderers/types';
+import type { BagraTheme } from '@/theme';
+import { resolveTheme } from '@/theme/resolve';
+import type { CodeOptions, Highlighter, HighlighterOptions } from '@/types';
 
-interface LoadedLanguage {
-  language: Language;
-  query: Query;
-  highlights: string;
-}
-
-let initPromise: Promise<void> | null = null;
+/**
+ * Cache WASM initialization by binary identity.
+ *
+ * Multiple highlighter instances sharing the same WASM binary reuse
+ * the same init promise. Different binaries each get their own init.
+ * When no binary is provided, a single shared init is used.
+ */
+const initCache = new Map<unknown, Promise<void>>();
 
 /**
  * Initialize the tree-sitter WASM runtime.
  *
- * This is called once, before any parsing can happen. If `wasmBinary` is
- * provided, it's passed directly to the Emscripten module, bypassing all
- * file/URL resolution.
+ * Caches by binary identity so `Parser.init()` is called at most once
+ * per distinct WASM binary.
  */
 async function initParser(
   wasmBinary?: ArrayBuffer | Uint8Array,
 ): Promise<void> {
+  // Use the binary reference as cache key (identity comparison).
+  // `undefined` is a valid Map key for the no-binary case.
+  const cacheKey = wasmBinary;
+
+  let initPromise = initCache.get(cacheKey);
+
   if (!initPromise) {
     const moduleOptions: Record<string, unknown> = {};
 
-    if (wasmBinary) {
-      // Ensure we pass an ArrayBuffer, not a Uint8Array view
-      moduleOptions.wasmBinary =
-        wasmBinary instanceof Uint8Array ? wasmBinary.buffer : wasmBinary;
+    if (wasmBinary instanceof Uint8Array) {
+      // Uint8Array may be a view over a larger ArrayBuffer (e.g., Node.js Buffer).
+      // Slice to get only the relevant portion.
+      const { buffer, byteOffset, byteLength } = wasmBinary;
+      moduleOptions.wasmBinary = buffer.slice(
+        byteOffset,
+        byteOffset + byteLength,
+      );
+    } else if (wasmBinary) {
+      moduleOptions.wasmBinary = wasmBinary;
     }
 
     initPromise = Parser.init(moduleOptions);
+    initCache.set(cacheKey, initPromise);
   }
 
   return initPromise;
-}
-
-/**
- * Known neovim-specific predicates that web-tree-sitter does not handle.
- * When encountered, the library warns because they are silently treated as
- * always-true, which can cause incorrect highlight assignments.
- *
- * @see https://neovim.io/doc/user/treesitter.html#treesitter-predicates
- */
-const UNSUPPORTED_PREDICATES = new Set([
-  'lua-match?',
-  'not-lua-match?',
-  'vim-match?',
-  'not-vim-match?',
-  'contains?',
-  'not-contains?',
-  'has-ancestor?',
-  'not-has-ancestor?',
-  'has-parent?',
-  'not-has-parent?',
-]);
-
-/**
- * Inspect a query for unsupported predicates (e.g. neovim-specific ones)
- * and emit a console warning. These predicates are silently treated as
- * always-true by web-tree-sitter, which can cause incorrect highlights.
- */
-function warnUnsupportedPredicates(query: Query, languageName: string): void {
-  const found = new Map<string, number>();
-
-  for (const patternPredicates of query.predicates) {
-    for (const predicate of patternPredicates) {
-      const op = predicate.operator;
-
-      if (UNSUPPORTED_PREDICATES.has(op)) {
-        found.set(op, (found.get(op) ?? 0) + 1);
-      }
-    }
-  }
-
-  if (found.size > 0) {
-    const details = [...found.entries()]
-      .map(([op, count]) => `#${op} (${count}×)`)
-      .join(', ');
-
-    console.warn(
-      `[bagra] Language "${languageName}": highlights query ` +
-        `contains unsupported predicates: ${details}. ` +
-        'These predicates are silently ignored by web-tree-sitter and treated ' +
-        'as always matching, which may cause incorrect highlighting. ' +
-        'Replace them with portable equivalents (e.g. #match? instead of #lua-match?).',
-    );
-  }
-}
-
-/**
- * Load a single language definition into a tree-sitter Language + Query pair.
- *
- * Resolves the highlights query from a file path/URL if a string is provided,
- * or uses the content directly if `{ content: string }` is provided.
- */
-async function initLanguage(
-  name: string,
-  definition: LanguageDefinition,
-): Promise<LoadedLanguage> {
-  const language = await Language.load(definition.grammar);
-  const highlightsContent = await resolveHighlights(definition.highlights);
-  const query = new Query(language, highlightsContent);
-
-  warnUnsupportedPredicates(query, name);
-
-  return { language, query, highlights: highlightsContent };
-}
-
-/**
- * Resolve the effective theme name from {@link CodeOptions}.
- *
- * Priority:
- * 1. `theme` — used directly as the theme name (single-theme shorthand)
- * 2. `themes` + `defaultColor` — looks up the key in the `themes` map
- * 3. `themes` (no `defaultColor`) — falls back to the first key
- * 4. `defaultColor: false` — explicitly opts out, returns `undefined`
- *
- * @param options - The per-call render options, if any.
- * @returns The theme name to set as `data-theme`, or `undefined` if none.
- */
-function resolveTheme(options?: CodeOptions): string | undefined {
-  if (!options) return undefined;
-
-  if (options.theme) {
-    return options.theme;
-  }
-
-  if (options.themes) {
-    if (options.defaultColor === false) {
-      return undefined;
-    }
-
-    if (options.defaultColor) {
-      return options.themes[options.defaultColor];
-    }
-
-    const firstKey = Object.keys(options.themes)[0];
-    return firstKey ? options.themes[firstKey] : undefined;
-  }
-
-  return undefined;
 }
 
 /**
@@ -170,7 +73,9 @@ function resolveTheme(options?: CodeOptions): string | undefined {
  *   languages: {
  *     scss: {
  *       grammar: '/grammars/tree-sitter-scss.wasm',
- *       highlights: '/grammars/scss-highlights.scm',
+ *       queries: {
+ *         highlights: '/grammars/scss-highlights.scm',
+ *       },
  *     },
  *   },
  * });
@@ -186,14 +91,20 @@ export async function createHighlighter(
   const parser = new Parser();
   const languages = new Map<string, LoadedLanguage>();
   const themes = new Map<string, BagraTheme>();
+  const registries = createRegistries({
+    predicates: options.predicates,
+    directives: options.directives,
+  });
+  const ctx: HighlightContext = { parser, languages, registries };
 
   let disposed = false;
 
   if (options.languages) {
-    const entries = Object.entries(options.languages);
+    const definitions = options.languages;
+    const entries = Object.entries(definitions);
     const loaded = await Promise.all(
-      entries.map(async ([name, def]) => {
-        const lang = await initLanguage(name, def);
+      entries.map(async ([name, definition]) => {
+        const lang = await initLanguage(definition, definitions);
         return [name, lang] as const;
       }),
     );
@@ -217,57 +128,34 @@ export async function createHighlighter(
     }
   }
 
-  function requireLanguage(lang: string): LoadedLanguage {
-    const loaded = languages.get(lang);
-
-    if (!loaded) {
+  function requireLanguage(lang: string): void {
+    if (!languages.has(lang)) {
       throw new Error(
         `Language "${lang}" is not loaded. ` +
-          `Call highlighter.loadLanguage("${lang}", { grammar, highlights }) first.`,
+          `Call highlighter.loadLanguage("${lang}", { grammar, queries: { highlights } }) first.`,
       );
     }
-
-    return loaded;
   }
 
-  function highlight(lang: string, code: string): HighlightEvent[] {
+  function getEvents(lang: string, code: string): HighlightEvent[] {
     assertNotDisposed();
-
-    const loaded = requireLanguage(lang);
-
-    parser.setLanguage(loaded.language);
-    const tree = parser.parse(code);
-
-    if (!tree) {
-      throw new Error(`Failed to parse source code for language "${lang}".`);
-    }
-
-    try {
-      const captures = loaded.query.captures(tree.rootNode);
-      const deduplicated = deduplicateCaptures(captures);
-
-      return generateEvents(deduplicated, code.length, code);
-    } finally {
-      tree.delete();
-    }
+    requireLanguage(lang);
+    return highlight(ctx, lang, code);
   }
 
   return {
     codeToHtml(lang: string, code: string, options?: CodeOptions): string {
-      const events = highlight(lang, code);
-      const theme = resolveTheme(options);
-      return renderHtml(events, code, theme);
+      const events = getEvents(lang, code);
+      return renderHtml(events, code, resolveTheme(options));
     },
 
-    codeToHast(lang: string, code: string, options?: CodeOptions): HastRoot {
-      const events = highlight(lang, code);
-      const theme = resolveTheme(options);
-      return renderHast(events, code, theme);
+    codeToHast(lang: string, code: string, options?: CodeOptions): Root {
+      const events = getEvents(lang, code);
+      return renderHast(events, code, resolveTheme(options));
     },
 
     codeToTokens(lang: string, code: string): Token[][] {
-      const events = highlight(lang, code);
-      return renderTokens(events, code);
+      return renderTokens(getEvents(lang, code), code);
     },
 
     async loadLanguage(
@@ -276,7 +164,7 @@ export async function createHighlighter(
     ): Promise<void> {
       assertNotDisposed();
 
-      const lang = await initLanguage(name, definition);
+      const lang = await initLanguage(definition);
       languages.set(name, lang);
     },
 
@@ -309,8 +197,14 @@ export async function createHighlighter(
       if (disposed) return;
       disposed = true;
 
-      for (const loaded of languages.values()) {
-        loaded.query.delete();
+      for (const { queries } of languages.values()) {
+        for (const query of queries.values()) {
+          query.delete();
+        }
+      }
+
+      for (const registry of Object.values(registries)) {
+        registry.clear();
       }
 
       languages.clear();

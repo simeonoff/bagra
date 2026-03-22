@@ -1,10 +1,9 @@
-import { resolve } from 'node:path';
-import { describe, expect, it, vi } from 'vitest';
-import { createHighlighter } from '../src/highlighter';
+import { grammar, query } from '@bagrajs/test-utils';
+import { describe, expect, it } from 'vitest';
+import { createHighlighter } from '@/highlighter';
 
-const FIXTURES = resolve(__dirname, '../../../internal/test-utils/fixtures');
-const GRAMMAR_PATH = resolve(FIXTURES, 'tree-sitter-scss.wasm');
-const HIGHLIGHTS_PATH = resolve(FIXTURES, 'scss-highlights.scm');
+const GRAMMAR_PATH = grammar('scss');
+const HIGHLIGHTS_PATH = query('scss', 'highlights');
 
 describe('error: unloaded language', () => {
   it('throws when calling codeToHtml with an unloaded language', async () => {
@@ -52,7 +51,10 @@ describe('error: disposed highlighter', () => {
   it('throws when calling codeToHtml after dispose', async () => {
     const hl = await createHighlighter({
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
 
@@ -64,7 +66,10 @@ describe('error: disposed highlighter', () => {
   it('throws when calling codeToTokens after dispose', async () => {
     const hl = await createHighlighter({
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
 
@@ -76,7 +81,10 @@ describe('error: disposed highlighter', () => {
   it('throws when calling codeToHast after dispose', async () => {
     const hl = await createHighlighter({
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
 
@@ -92,7 +100,7 @@ describe('error: disposed highlighter', () => {
     await expect(
       hl.loadLanguage('scss', {
         grammar: GRAMMAR_PATH,
-        highlights: HIGHLIGHTS_PATH,
+        queries: { highlights: HIGHLIGHTS_PATH },
       }),
     ).rejects.toThrow(/disposed/);
   });
@@ -111,7 +119,7 @@ describe('error: invalid grammar', () => {
     await expect(
       hl.loadLanguage('fake', {
         grammar: '/nonexistent/path/fake.wasm',
-        highlights: { content: '(identifier) @variable' },
+        queries: { highlights: { content: '(identifier) @variable' } },
       }),
     ).rejects.toThrow();
 
@@ -124,7 +132,7 @@ describe('error: invalid grammar', () => {
     await expect(
       hl.loadLanguage('fake', {
         grammar: new Uint8Array([0, 1, 2, 3, 4, 5]),
-        highlights: { content: '(identifier) @variable' },
+        queries: { highlights: { content: '(identifier) @variable' } },
       }),
     ).rejects.toThrow();
 
@@ -132,134 +140,10 @@ describe('error: invalid grammar', () => {
   });
 });
 
-describe('warning: unsupported predicates', () => {
-  it('warns when highlights query contains #lua-match?', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    const hl = await createHighlighter({
-      languages: {
-        scss: {
-          grammar: GRAMMAR_PATH,
-          highlights: {
-            content: `
-              (identifier) @variable
-              ((identifier) @function
-                (#lua-match? @function "^[A-Z]"))
-            `,
-          },
-        },
-      },
-    });
-
-    expect(warnSpy).toHaveBeenCalledOnce();
-    expect(warnSpy.mock.calls[0][0]).toMatch(/unsupported predicates/);
-    expect(warnSpy.mock.calls[0][0]).toMatch(/#lua-match\?/);
-    expect(warnSpy.mock.calls[0][0]).toMatch(/Language "scss"/);
-
-    hl.dispose();
-    warnSpy.mockRestore();
-  });
-
-  it('warns when highlights query contains #vim-match?', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    const hl = await createHighlighter({
-      languages: {
-        scss: {
-          grammar: GRAMMAR_PATH,
-          highlights: {
-            content: `
-              (identifier) @variable
-              ((identifier) @constant
-                (#vim-match? @constant "^[A-Z_]+$"))
-            `,
-          },
-        },
-      },
-    });
-
-    expect(warnSpy).toHaveBeenCalledOnce();
-    expect(warnSpy.mock.calls[0][0]).toMatch(/#vim-match\?/);
-
-    hl.dispose();
-    warnSpy.mockRestore();
-  });
-
-  it('does not warn when query uses only portable predicates', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    const hl = await createHighlighter({
-      languages: {
-        scss: {
-          grammar: GRAMMAR_PATH,
-          highlights: {
-            content: `
-              (identifier) @variable
-              ((identifier) @function
-                (#match? @function "^[A-Z]"))
-            `,
-          },
-        },
-      },
-    });
-
-    expect(warnSpy).not.toHaveBeenCalled();
-
-    hl.dispose();
-    warnSpy.mockRestore();
-  });
-
-  it('includes count of predicate occurrences in warning', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    const hl = await createHighlighter({
-      languages: {
-        scss: {
-          grammar: GRAMMAR_PATH,
-          highlights: {
-            content: `
-              ((identifier) @variable
-                (#lua-match? @variable "^[$]"))
-              ((identifier) @function
-                (#lua-match? @function "^[A-Z]"))
-            `,
-          },
-        },
-      },
-    });
-
-    expect(warnSpy).toHaveBeenCalledOnce();
-    // Should show the count: 2×
-    expect(warnSpy.mock.calls[0][0]).toMatch(/2×/);
-
-    hl.dispose();
-    warnSpy.mockRestore();
-  });
-
-  it('suggests using #match? as a replacement', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    const hl = await createHighlighter({
-      languages: {
-        scss: {
-          grammar: GRAMMAR_PATH,
-          highlights: {
-            content: `
-              ((identifier) @variable
-                (#lua-match? @variable "^[-][-]"))
-            `,
-          },
-        },
-      },
-    });
-
-    expect(warnSpy.mock.calls[0][0]).toMatch(/#match\?/);
-    expect(warnSpy.mock.calls[0][0]).toMatch(/instead of/);
-
-    hl.dispose();
-    warnSpy.mockRestore();
-  });
-});
+// Note: predicate warning tests were removed because predicates like
+// #lua-match?, #contains?, #has-ancestor?, etc. are now handled natively
+// by the predicate registry (see core/predicates.ts). The old warning
+// system for "unsupported predicates" is no longer needed.
 
 describe('error: invalid highlights query', () => {
   it('throws when highlights content has invalid syntax', async () => {
@@ -268,7 +152,7 @@ describe('error: invalid highlights query', () => {
     await expect(
       hl.loadLanguage('scss', {
         grammar: GRAMMAR_PATH,
-        highlights: { content: '((((invalid query syntax' },
+        queries: { highlights: { content: '((((invalid query syntax' } },
       }),
     ).rejects.toThrow();
 
@@ -281,7 +165,7 @@ describe('error: invalid highlights query', () => {
     await expect(
       hl.loadLanguage('scss', {
         grammar: GRAMMAR_PATH,
-        highlights: '/nonexistent/path/highlights.scm',
+        queries: { highlights: '/nonexistent/path/highlights.scm' },
       }),
     ).rejects.toThrow();
 

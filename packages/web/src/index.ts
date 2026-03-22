@@ -13,7 +13,9 @@
  *   languages: {
  *     scss: {
  *       grammar: '/grammars/tree-sitter-scss.wasm',
- *       highlights: scssHighlightsScm,
+ *       queries: {
+ *         highlights: scssHighlightsScm,
+ *       },
  *     },
  *   },
  * });
@@ -44,18 +46,20 @@ export type {
   BagraTheme,
   Base16Scheme,
   CodeOptions,
-  HastElement,
-  HastNode,
-  HastRoot,
-  HastText,
+  Element,
   HighlightEvent,
   Highlighter,
   HighlighterOptions,
   LanguageDefinition,
+  LogLevel,
+  Root,
+  RootContent,
+  Text,
   Token,
 } from '@bagrajs/core';
 
 export {
   generateThemeCSS,
   generateThemeCSSWithMediaQuery,
+  setLogLevel,
 } from '@bagrajs/core';

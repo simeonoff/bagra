@@ -1,4 +1,5 @@
-import type { HighlightEvent, Token } from '../types';
+import type { HighlightEvent } from '@/highlight/types';
+import type { Token } from '@/renderers/types';
 
 /**
  * Render a highlight event stream into an array of lines, each containing

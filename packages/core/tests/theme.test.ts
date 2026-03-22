@@ -5,7 +5,7 @@ import {
   generateScheme,
   generateThemeCSS,
   generateThemeCSSWithMediaQuery,
-} from '../src/theme';
+} from '@/theme';
 
 /** A complete valid Base16 scheme for testing. */
 const TOMORROW_NIGHT: Base16Scheme = {

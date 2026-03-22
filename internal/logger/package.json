@@ -1,0 +1,12 @@
+{
+  "name": "@bagrajs/logger",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  }
+}

@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
-import { afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { createHighlighter } from '../src/highlighter';
-import type { HastElement, Highlighter } from '../src/types';
+import { grammar, query } from '@bagrajs/test-utils';
+import type { Element } from 'hast';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { createHighlighter } from '@/highlighter';
+import type { Highlighter } from '@/types';
 
-const FIXTURES = resolve(__dirname, '../../../internal/test-utils/fixtures');
-const GRAMMAR_PATH = resolve(FIXTURES, 'tree-sitter-scss.wasm');
-const HIGHLIGHTS_PATH = resolve(FIXTURES, 'scss-highlights.scm');
+const GRAMMAR_PATH = grammar('scss');
+const HIGHLIGHTS_PATH = query('scss', 'highlights');
 
 let highlightsScm: string;
 
@@ -31,7 +31,10 @@ describe('createHighlighter', () => {
   it('creates a highlighter with highlights as a file path', async () => {
     hl = await createHighlighter({
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
 
@@ -48,7 +51,7 @@ describe('createHighlighter', () => {
       languages: {
         scss: {
           grammar: GRAMMAR_PATH,
-          highlights: { content: highlightsScm },
+          queries: { highlights: { content: highlightsScm } },
         },
       },
     });
@@ -63,7 +66,7 @@ describe('createHighlighter', () => {
 
     await hl.loadLanguage('scss', {
       grammar: GRAMMAR_PATH,
-      highlights: HIGHLIGHTS_PATH,
+      queries: { highlights: HIGHLIGHTS_PATH },
     });
 
     expect(hl.hasLanguage('scss')).toBe(true);
@@ -75,7 +78,7 @@ describe('createHighlighter', () => {
 
     await hl.loadLanguage('scss', {
       grammar: GRAMMAR_PATH,
-      highlights: { content: highlightsScm },
+      queries: { highlights: { content: highlightsScm } },
     });
 
     expect(hl.hasLanguage('scss')).toBe(true);
@@ -88,7 +91,7 @@ describe('createHighlighter', () => {
       languages: {
         scss: {
           grammar: new Uint8Array(grammarBytes),
-          highlights: { content: highlightsScm },
+          queries: { highlights: { content: highlightsScm } },
         },
       },
     });
@@ -101,7 +104,10 @@ describe('createHighlighter', () => {
   it('produces identical output with path vs { content }', async () => {
     const hlPath = await createHighlighter({
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
 
@@ -109,7 +115,7 @@ describe('createHighlighter', () => {
       languages: {
         scss: {
           grammar: GRAMMAR_PATH,
-          highlights: { content: highlightsScm },
+          queries: { highlights: { content: highlightsScm } },
         },
       },
     });
@@ -130,12 +136,15 @@ describe('codeToHtml', () => {
   beforeAll(async () => {
     hl = await createHighlighter({
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
   });
 
-  afterEach(() => {});
+  afterAll(() => hl?.dispose());
 
   it('highlights a simple SCSS variable declaration', () => {
     const html = hl.codeToHtml('scss', '$color: red;');
@@ -210,7 +219,10 @@ describe('codeToTokens', () => {
   beforeAll(async () => {
     hl = await createHighlighter({
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
   });
@@ -276,7 +288,10 @@ describe('codeToHast', () => {
   beforeAll(async () => {
     hl = await createHighlighter({
       languages: {
-        scss: { grammar: GRAMMAR_PATH, highlights: HIGHLIGHTS_PATH },
+        scss: {
+          grammar: GRAMMAR_PATH,
+          queries: { highlights: HIGHLIGHTS_PATH },
+        },
       },
     });
   });
@@ -285,16 +300,16 @@ describe('codeToHast', () => {
     const root = hl.codeToHast('scss', '$x: 1;');
 
     expect(root.type).toBe('root');
-    const pre = root.children[0] as HastElement;
+    const pre = root.children[0] as Element;
     expect(pre.tagName).toBe('pre');
     expect(pre.properties.className).toEqual(['bagra']);
 
-    const code = pre.children[0] as HastElement;
+    const code = pre.children[0] as Element;
     expect(code.tagName).toBe('code');
     expect(code.children.length).toBeGreaterThan(0);
 
     // First child should be a line span
-    const line = code.children[0] as HastElement;
+    const line = code.children[0] as Element;
     expect(line.tagName).toBe('span');
     expect(line.properties.className).toEqual(['line']);
     expect(line.children.length).toBeGreaterThan(0);
@@ -313,33 +328,33 @@ describe('codeToHast', () => {
       return text;
     }
 
-    const pre = root.children[0] as HastElement;
-    const code = pre.children[0] as HastElement;
+    const pre = root.children[0] as Element;
+    const code = pre.children[0] as Element;
     const reconstructed = collectText(code.children);
     expect(reconstructed).toBe(source);
   });
 
   it('sets dataTheme on <pre> when theme option is provided', () => {
     const root = hl.codeToHast('scss', '$x: 1;', { theme: 'dracula' });
-    const pre = root.children[0] as HastElement;
+    const pre = root.children[0] as Element;
 
     expect(pre.properties.dataTheme).toBe('dracula');
   });
 
   it('does not set dataTheme when no theme option', () => {
     const root = hl.codeToHast('scss', '$x: 1;');
-    const pre = root.children[0] as HastElement;
+    const pre = root.children[0] as Element;
 
     expect(pre.properties).not.toHaveProperty('dataTheme');
   });
 
   it('creates span elements with bare capture class names (no prefix)', () => {
     const root = hl.codeToHast('scss', '$x: 1;');
-    const pre = root.children[0] as HastElement;
-    const code = pre.children[0] as HastElement;
+    const pre = root.children[0] as Element;
+    const code = pre.children[0] as Element;
 
-    function findHighlightSpans(nodes: any[]): HastElement[] {
-      const spans: HastElement[] = [];
+    function findHighlightSpans(nodes: any[]): Element[] {
+      const spans: Element[] = [];
       for (const node of nodes) {
         if (node.type === 'element' && node.tagName === 'span') {
           const classes = node.properties.className as string[];

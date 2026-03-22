@@ -1,16 +1,24 @@
-import type { HighlightEvent } from '../types';
-import { captureToSpanAttrs } from '../utils';
+import { captureToSpanAttrs } from '@/core/utils';
+import type { HighlightEvent } from '@/highlight/types';
+
+const HTML_ESCAPE_MAP: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  "'": '&#39;',
+  '"': '&quot;',
+};
+
+const HTML_ESCAPE_RE = /[&<>'"]/g;
 
 /**
  * Escape special HTML characters in source text.
+ *
+ * Uses a single-pass regex replace with a lookup map instead of
+ * chaining five separate `.replace()` calls.
  */
 function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/'/g, '&#39;')
-    .replace(/"/g, '&quot;');
+  return text.replace(HTML_ESCAPE_RE, (ch) => HTML_ESCAPE_MAP[ch]);
 }
 
 /**

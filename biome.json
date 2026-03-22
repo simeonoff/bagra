@@ -17,7 +17,6 @@
     "enabled": true,
     "rules": {
       "recommended": true,
-
       "complexity": {
         "noForEach": "off",
         "noStaticOnlyClass": "off"
@@ -46,10 +45,22 @@
       "suspicious": {
         "noConsole": "warn",
         "noDebugger": "error",
-        "noExplicitAny": "off"
+        "noExplicitAny": "warn"
       }
     }
   },
+  "overrides": [
+    {
+      "includes": ["internal/logger/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    }
+  ],
   "javascript": {
     "formatter": {
       "quoteStyle": "single"
