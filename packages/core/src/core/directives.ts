@@ -1,6 +1,6 @@
 import { logger } from '@bagrajs/logger';
 import type { QueryCapture, QueryMatch, QueryPredicate } from 'web-tree-sitter';
-import { isDirective, resolveCapture } from '@/core/utils';
+import { isDirective, resolveCapture, warnUnknownOperator } from '@/core/utils';
 import type { DirectiveRegistry, QueryHandlerContext } from '@/types';
 
 /**
@@ -73,16 +73,6 @@ function offset({ match, predicate }: QueryHandlerContext): void {
   });
 }
 
-/** Track unknown operators to avoid spamming repeated warnings. */
-const warnedOperators = new Set<string>();
-
-function warnUnknownOperator(operator: string): void {
-  if (warnedOperators.has(operator)) return;
-
-  warnedOperators.add(operator);
-  logger.warn(`Unknown directive "#${operator}" is not registered. Ignoring.`);
-}
-
 /** Built-in directive entries for the registry. */
 export const BUILTIN_DIRECTIVES: [
   string,
@@ -113,7 +103,7 @@ export function applyDirectives(
       const handler = registry.get(predicate.operator);
 
       if (!handler) {
-        warnUnknownOperator(predicate.operator);
+        warnUnknownOperator(predicate.operator, 'directive');
         continue;
       }
 
@@ -124,7 +114,7 @@ export function applyDirectives(
 
 /**
  * Apply directives to query captures.
- *
+
  * Same as {@link applyDirectives} but for the captures array from
  * `query.captures()`. Each capture is wrapped in a synthetic match
  * for the directive handler.
@@ -150,7 +140,7 @@ export function applyDirectivesToCaptures(
       const handler = registry.get(predicate.operator);
 
       if (!handler) {
-        warnUnknownOperator(predicate.operator);
+        warnUnknownOperator(predicate.operator, 'directive');
         continue;
       }
 

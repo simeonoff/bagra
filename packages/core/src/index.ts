@@ -28,20 +28,23 @@
  * @module
  */
 
+export type { LogLevel } from '@bagrajs/logger';
 export { setLogLevel } from '@bagrajs/logger';
-export type { Element, Root, RootContent, Text } from 'hast';
 export { createHighlighter } from './highlighter';
 export type { BagraTheme, Base16Scheme } from './theme';
 export { generateThemeCSS, generateThemeCSSWithMediaQuery } from './theme';
 export type {
   CodeOptions,
   DirectiveHandler,
+  Element,
   HighlightEvent,
   Highlighter,
   HighlighterOptions,
   LanguageDefinition,
   LanguageQueries,
-  LogLevel,
   PredicateHandler,
+  Root,
+  RootContent,
+  Text,
   Token,
 } from './types';

@@ -182,8 +182,10 @@ export function collectCaptures(
       return EMPTY_RESULT;
     }
 
-    const firstRange = descriptor.ranges.at(0)!;
-    const lastRange = descriptor.ranges.at(-1)!;
+    if (descriptor.ranges.length === 0) return EMPTY_RESULT;
+
+    const firstRange = descriptor.ranges[0];
+    const lastRange = descriptor.ranges[descriptor.ranges.length - 1];
 
     const key = injectionKey(
       descriptor.language,

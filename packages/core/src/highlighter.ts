@@ -1,4 +1,3 @@
-import { setLogLevel } from '@bagrajs/logger';
 import type { Root } from 'hast';
 import { Parser } from 'web-tree-sitter';
 import { initLanguage, type LoadedLanguage } from '@/core/language';
@@ -14,28 +13,47 @@ import type { BagraTheme } from '@/theme';
 import { resolveTheme } from '@/theme/resolve';
 import type { CodeOptions, Highlighter, HighlighterOptions } from '@/types';
 
-let initPromise: Promise<void> | null = null;
+/**
+ * Cache WASM initialization by binary identity.
+ *
+ * Multiple highlighter instances sharing the same WASM binary reuse
+ * the same init promise. Different binaries each get their own init.
+ * When no binary is provided, a single shared init is used.
+ */
+const initCache = new Map<unknown, Promise<void>>();
 
 /**
  * Initialize the tree-sitter WASM runtime.
  *
- * This is called once, before any parsing can happen. If `wasmBinary` is
- * provided, it's passed directly to the Emscripten module, bypassing all
- * file/URL resolution.
+ * Caches by binary identity so `Parser.init()` is called at most once
+ * per distinct WASM binary.
  */
 async function initParser(
   wasmBinary?: ArrayBuffer | Uint8Array,
 ): Promise<void> {
+  // Use the binary reference as cache key (identity comparison).
+  // `undefined` is a valid Map key for the no-binary case.
+  const cacheKey = wasmBinary;
+
+  let initPromise = initCache.get(cacheKey);
+
   if (!initPromise) {
     const moduleOptions: Record<string, unknown> = {};
 
-    if (wasmBinary) {
-      // Ensure we pass an ArrayBuffer, not a Uint8Array view
-      moduleOptions.wasmBinary =
-        wasmBinary instanceof Uint8Array ? wasmBinary.buffer : wasmBinary;
+    if (wasmBinary instanceof Uint8Array) {
+      // Uint8Array may be a view over a larger ArrayBuffer (e.g., Node.js Buffer).
+      // Slice to get only the relevant portion.
+      const { buffer, byteOffset, byteLength } = wasmBinary;
+      moduleOptions.wasmBinary = buffer.slice(
+        byteOffset,
+        byteOffset + byteLength,
+      );
+    } else if (wasmBinary) {
+      moduleOptions.wasmBinary = wasmBinary;
     }
 
     initPromise = Parser.init(moduleOptions);
+    initCache.set(cacheKey, initPromise);
   }
 
   return initPromise;
@@ -69,10 +87,6 @@ export async function createHighlighter(
   options: HighlighterOptions = {},
 ): Promise<Highlighter> {
   await initParser(options.wasmBinary);
-
-  if (options.logLevel) {
-    setLogLevel(options.logLevel);
-  }
 
   const parser = new Parser();
   const languages = new Map<string, LoadedLanguage>();
@@ -183,9 +197,14 @@ export async function createHighlighter(
       if (disposed) return;
       disposed = true;
 
-      for (const loaded of languages.values()) {
-        loaded.queries.delete('highlights');
-        loaded.queries.delete('injections');
+      for (const { queries } of languages.values()) {
+        for (const query of queries.values()) {
+          query.delete();
+        }
+      }
+
+      for (const registry of Object.values(registries)) {
+        registry.clear();
       }
 
       languages.clear();

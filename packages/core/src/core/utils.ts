@@ -1,4 +1,25 @@
+import { logger } from '@bagrajs/logger';
 import type { QueryCapture, QueryMatch, QueryPredicate } from 'web-tree-sitter';
+
+/** Track unknown operators to avoid spamming repeated warnings. */
+const warnedOperators = new Set<string>();
+
+/**
+ * Warn once about an unknown predicate or directive operator.
+ * Subsequent calls with the same operator are silently ignored.
+ */
+export function warnUnknownOperator(
+  operator: string,
+  kind: 'predicate' | 'directive',
+): void {
+  const key = `${kind}:${operator}`;
+  if (warnedOperators.has(key)) return;
+
+  warnedOperators.add(key);
+
+  const action = kind === 'predicate' ? 'Treating as always-true' : 'Ignoring';
+  logger.warn(`Unknown ${kind} "#${operator}" is not registered. ${action}.`);
+}
 
 /**
  * Resolve a capture name to its capture from a match's captures array.
