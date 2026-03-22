@@ -1,9 +1,10 @@
+import { logger } from '@bagrajs/logger';
 import { Language, Query } from 'web-tree-sitter';
 import { parseModeline, stripModeline } from '@/core/modeline';
 import { resolveQuery } from '@/core/queries';
-import type { LanguageDefinition, QueryContent } from '@/core/types';
+import type { LanguageDefinition, LanguageQueries, QueryContent } from '@/core/types';
 
-export type QueryTypes = 'highlights' | 'injections';
+export type QueryTypes = keyof LanguageQueries;
 export type Queries = Map<QueryTypes, Query>;
 
 export interface LoadedLanguage {
@@ -17,11 +18,6 @@ export interface LoadedLanguage {
  *
  * Inherited queries are prepended to the current query content, with
  * modeline comments stripped from all parts.
- *
- * @param queryContent - The query content or path for the current language.
- * @param queryType - Which query type to look up in inherited languages.
- * @param definitions - All language definitions, needed to resolve inherited queries.
- * @param seen - Cycle detection: set of language names already in the resolution chain.
  */
 async function resolveQueryWithInheritance(
   queryContent: QueryContent,
@@ -40,15 +36,19 @@ async function resolveQueryWithInheritance(
   const parts: string[] = [];
 
   for (const { language, optional } of modeline.inherits) {
-    if (seen.has(language)) continue;
+    if (seen.has(language)) {
+      logger.warn(
+        `Circular query inheritance detected for "${language}". Skipping to prevent infinite loop.`,
+      );
+      continue;
+    }
 
     const parentDef = definitions[language];
     const parentQuery = parentDef?.queries?.[queryType];
 
     if (!parentQuery && !optional) {
-      console.warn(
-        `[bagra] Query inherits from "${language}" but no ${queryType} ` +
-          'query is available for that language. Skipping.',
+      logger.warn(
+        `Query inherits from "${language}" but no ${queryType} query is available for that language. Skipping.`,
       );
     }
 
@@ -82,11 +82,6 @@ async function resolveQueryWithInheritance(
  *
  * When a query contains `; inherits:` modeline directives, the inherited
  * queries are automatically resolved from `definitions` and prepended.
- *
- * @param definition - The language definition to load.
- * @param definitions - All language definitions in the highlighter,
- *   needed to resolve `; inherits:` modeline directives. Defaults to
- *   an empty object (no inheritance resolution).
  */
 export async function initLanguage(
   definition: LanguageDefinition,

@@ -1,3 +1,4 @@
+import type { LogLevel } from '@bagrajs/logger';
 import type { Root } from 'hast';
 import type { QueryMatch, QueryPredicate } from 'web-tree-sitter';
 import type { LanguageDefinition } from '@/core/types';
@@ -5,6 +6,7 @@ import type { Token } from '@/renderers/types';
 import type { BagraTheme } from '@/theme';
 
 // Re-export types from their domain modules for public API consumers
+export type { LogLevel } from '@bagrajs/logger';
 export type {
   LanguageDefinition,
   LanguageQueries,
@@ -61,6 +63,18 @@ export type {
  * Options for creating a highlighter instance.
  */
 export interface HighlighterOptions {
+  /**
+   * Minimum log level for diagnostic messages.
+   *
+   * Controls which messages are output via `console`:
+   * - `'debug'` — all messages
+   * - `'info'` — info, warnings, and errors
+   * - `'warn'` — warnings and errors (default)
+   * - `'error'` — errors only
+   * - `'silent'` — no output
+   */
+  logLevel?: LogLevel;
+
   /**
    * Pre-loaded `web-tree-sitter` WASM binary.
    *

@@ -1,3 +1,4 @@
+import { logger } from '@bagrajs/logger';
 import type { QueryCapture, QueryMatch, QueryPredicate } from 'web-tree-sitter';
 import { isDirective, resolveCapture } from '@/core/utils';
 import type {
@@ -25,6 +26,10 @@ function luaMatch({ match, predicate }: QueryHandlerContext): boolean {
       capture.node.text,
     );
   } catch {
+    logger.warn(
+      `Failed to compile Lua pattern "${patternStep.value}" as regex in #lua-match? predicate. Treating as always-true.`,
+    );
+
     return true;
   }
 }
@@ -199,6 +204,18 @@ export const BUILTIN_PREDICATES: [string, PredicateHandler][] = [
  * A match is kept only if ALL its predicates return `true`.
  * Unknown predicates are treated as always-true.
  */
+/** Track unknown operators to avoid spamming repeated warnings. */
+const warnedOperators = new Set<string>();
+
+function warnUnknownOperator(operator: string): void {
+  if (warnedOperators.has(operator)) return;
+
+  warnedOperators.add(operator);
+  logger.warn(
+    `Unknown predicate "#${operator}" is not registered. Treating as always-true.`,
+  );
+}
+
 export function filterMatchesByPredicates(
   matches: QueryMatch[],
   predicatesByPattern: QueryPredicate[][],
@@ -212,7 +229,11 @@ export function filterMatchesByPredicates(
       if (isDirective(predicate)) return true;
 
       const handler = registry.get(predicate.operator);
-      if (!handler) return true;
+
+      if (!handler) {
+        warnUnknownOperator(predicate.operator);
+        return true;
+      }
 
       return handler({ match, predicate });
     });
@@ -243,7 +264,11 @@ export function filterCapturesByPredicates(
       if (isDirective(predicate)) return true;
 
       const handler = registry.get(predicate.operator);
-      if (!handler) return true;
+
+      if (!handler) {
+        warnUnknownOperator(predicate.operator);
+        return true;
+      }
 
       return handler({ match: syntheticMatch, predicate });
     });

@@ -1,3 +1,4 @@
+import { setLogLevel } from '@bagrajs/logger';
 import type { Root } from 'hast';
 import { Parser } from 'web-tree-sitter';
 import { initLanguage, type LoadedLanguage } from '@/core/language';
@@ -69,6 +70,10 @@ export async function createHighlighter(
 ): Promise<Highlighter> {
   await initParser(options.wasmBinary);
 
+  if (options.logLevel) {
+    setLogLevel(options.logLevel);
+  }
+
   const parser = new Parser();
   const languages = new Map<string, LoadedLanguage>();
   const themes = new Map<string, BagraTheme>();
@@ -83,7 +88,6 @@ export async function createHighlighter(
   if (options.languages) {
     const definitions = options.languages;
     const entries = Object.entries(definitions);
-
     const loaded = await Promise.all(
       entries.map(async ([name, definition]) => {
         const lang = await initLanguage(definition, definitions);
@@ -114,7 +118,7 @@ export async function createHighlighter(
     if (!languages.has(lang)) {
       throw new Error(
         `Language "${lang}" is not loaded. ` +
-          `Call highlighter.loadLanguage("${lang}", { grammar, highlights }) first.`,
+          `Call highlighter.loadLanguage("${lang}", { grammar, queries: { highlights } }) first.`,
       );
     }
   }

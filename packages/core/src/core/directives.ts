@@ -1,3 +1,4 @@
+import { logger } from '@bagrajs/logger';
 import type { QueryCapture, QueryMatch, QueryPredicate } from 'web-tree-sitter';
 import { isDirective, resolveCapture } from '@/core/utils';
 import type { DirectiveRegistry, QueryHandlerContext } from '@/types';
@@ -25,8 +26,19 @@ import type { DirectiveRegistry, QueryHandlerContext } from '@/types';
 function offset({ match, predicate }: QueryHandlerContext): void {
   const [captureStep, ...deltaSteps] = predicate.operands;
 
-  if (captureStep?.type !== 'capture') return;
-  if (deltaSteps.length < 4) return;
+  if (captureStep?.type !== 'capture') {
+    logger.warn(
+      '#offset! directive: first operand must be a capture reference. Skipping.',
+    );
+    return;
+  }
+
+  if (deltaSteps.length < 4) {
+    logger.warn(
+      `#offset! directive: expected 4 delta operands but got ${deltaSteps.length}. Skipping.`,
+    );
+    return;
+  }
 
   const capture = resolveCapture(match, captureStep.name);
   if (!capture) return;
@@ -61,6 +73,16 @@ function offset({ match, predicate }: QueryHandlerContext): void {
   });
 }
 
+/** Track unknown operators to avoid spamming repeated warnings. */
+const warnedOperators = new Set<string>();
+
+function warnUnknownOperator(operator: string): void {
+  if (warnedOperators.has(operator)) return;
+
+  warnedOperators.add(operator);
+  logger.warn(`Unknown directive "#${operator}" is not registered. Ignoring.`);
+}
+
 /** Built-in directive entries for the registry. */
 export const BUILTIN_DIRECTIVES: [
   string,
@@ -74,7 +96,7 @@ export const BUILTIN_DIRECTIVES: [
  * node positions). They run before predicate filtering so that
  * predicates see the adjusted state.
  *
- * Unknown directives are silently ignored.
+ * Unknown directives trigger a warning and are ignored.
  */
 export function applyDirectives(
   matches: QueryMatch[],
@@ -89,7 +111,13 @@ export function applyDirectives(
       if (!isDirective(predicate)) continue;
 
       const handler = registry.get(predicate.operator);
-      handler?.({ match, predicate });
+
+      if (!handler) {
+        warnUnknownOperator(predicate.operator);
+        continue;
+      }
+
+      handler({ match, predicate });
     }
   }
 }
@@ -120,7 +148,13 @@ export function applyDirectivesToCaptures(
       if (!isDirective(predicate)) continue;
 
       const handler = registry.get(predicate.operator);
-      handler?.({ match: syntheticMatch, predicate });
+
+      if (!handler) {
+        warnUnknownOperator(predicate.operator);
+        continue;
+      }
+
+      handler({ match: syntheticMatch, predicate });
     }
   }
 }

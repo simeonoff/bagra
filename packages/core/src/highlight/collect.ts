@@ -1,3 +1,4 @@
+import { logger } from '@bagrajs/logger';
 import type { QueryCapture, Range, Tree } from 'web-tree-sitter';
 import { applyDirectives, applyDirectivesToCaptures } from '@/core/directives';
 import {
@@ -75,7 +76,15 @@ export function collectCaptures(
   ): LayeredResult {
     const loaded = ctx.languages.get(currentLang);
 
-    if (!loaded) return EMPTY_RESULT;
+    if (!loaded) {
+      if (depth > 0) {
+        logger.warn(
+          `Language "${currentLang}" is not loaded. Skipping injection.`,
+        );
+      }
+
+      return EMPTY_RESULT;
+    }
 
     ctx.parser.setLanguage(loaded.language);
 
@@ -83,7 +92,13 @@ export function collectCaptures(
       includedRanges: parentRanges,
     });
 
-    if (!tree) return EMPTY_RESULT;
+    if (!tree) {
+      logger.error(
+        `Failed to parse source for language "${currentLang}". This may indicate a corrupt grammar or invalid included ranges.`,
+      );
+
+      return EMPTY_RESULT;
+    }
 
     const trees: Tree[] = [tree];
 
@@ -154,7 +169,13 @@ export function collectCaptures(
     depth: number,
     parentLang: string,
   ): LayeredResult {
-    if (!ctx.languages.has(descriptor.language)) return EMPTY_RESULT;
+    if (!ctx.languages.has(descriptor.language)) {
+      logger.warn(
+        `Injection language "${descriptor.language}" is not loaded. Skipping.`,
+      );
+
+      return EMPTY_RESULT;
+    }
 
     const firstRange = descriptor.ranges.at(0)!;
     const lastRange = descriptor.ranges.at(-1)!;
@@ -165,7 +186,13 @@ export function collectCaptures(
       lastRange.endIndex,
     );
 
-    if (seen.has(key)) return EMPTY_RESULT;
+    if (seen.has(key)) {
+      logger.warn(
+        `Injection cycle detected for "${descriptor.language}" at ${firstRange.startIndex}-${lastRange.endIndex}. Skipping.`,
+      );
+
+      return EMPTY_RESULT;
+    }
     seen.add(key);
 
     const contentNodes = descriptor.ranges.map((r) => r.node);
