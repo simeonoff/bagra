@@ -51,6 +51,7 @@ export type {
   Highlighter,
   HighlighterOptions,
   LanguageDefinition,
+  LogLevel,
   Root,
   RootContent,
   Text,
@@ -60,4 +61,5 @@ export type {
 export {
   generateThemeCSS,
   generateThemeCSSWithMediaQuery,
+  setLogLevel,
 } from '@bagrajs/core';

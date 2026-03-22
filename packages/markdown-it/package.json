@@ -1,6 +1,7 @@
 {
   "name": "@bagrajs/markdown-it",
   "version": "0.1.0",
+  "private": true,
   "description": "markdown-it plugin for tree-sitter syntax highlighting",
   "keywords": [
     "tree-sitter",
