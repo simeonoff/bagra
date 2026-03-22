@@ -39,7 +39,10 @@ export function interleaveCaptures(layered: LayeredCapture[]): QueryCapture[] {
     }
   }
 
-  // Phase 2: Across layers, deduplicate by byte range (deeper wins)
+  // Phase 2: Deduplicate by byte range
+  // Different nodes at the same range: deeper layer wins (cross-layer),
+  // higher pattern index wins (same layer — e.g., "!" matched as both
+  // @operator and @comment.documentation via parent/child nodes)
   const byRange = new Map<string, LayeredCapture>();
 
   for (const entry of byNode.values()) {
@@ -47,7 +50,12 @@ export function interleaveCaptures(layered: LayeredCapture[]): QueryCapture[] {
     const key = `${startIndex}:${endIndex}`;
     const existing = byRange.get(key);
 
-    if (!existing || entry.depth > existing.depth) {
+    if (
+      !existing ||
+      entry.depth > existing.depth ||
+      (entry.depth === existing.depth &&
+        entry.capture.patternIndex > existing.capture.patternIndex)
+    ) {
       byRange.set(key, entry);
     }
   }

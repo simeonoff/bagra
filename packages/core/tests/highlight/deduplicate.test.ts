@@ -338,4 +338,47 @@ describe('interleaveCaptures', () => {
       ['tag', 40, 50], // closing tag
     ]);
   });
+
+  it('keeps higher pattern index when same range and same depth (parent/child nodes)', () => {
+    // Simulates Rust doc comment: "!" is matched by both:
+    //   pattern 80: "!" @operator (on the "!" literal child node)
+    //   pattern 102: (inner_doc_comment_marker) @comment.documentation (on the marker parent)
+    // Both cover bytes [2-3] at depth 0, different node IDs.
+    // The higher pattern index (comment.documentation) should win.
+    const captures = [
+      mockLayered('operator', 80, 2, 3, 0),
+      mockLayered('comment.documentation', 102, 2, 3, 0),
+    ];
+
+    const result = interleaveCaptures(captures);
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('comment.documentation');
+  });
+
+  it('keeps deeper layer even when shallower has higher pattern index', () => {
+    // Cross-layer: depth takes priority over pattern index
+    const captures = [
+      mockLayered('keyword', 200, 5, 10, 0), // high pattern, shallow
+      mockLayered('variable', 50, 5, 10, 1), // low pattern, deeper
+    ];
+
+    const result = interleaveCaptures(captures);
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('variable'); // deeper layer wins
+  });
+
+  it('handles multiple same-range conflicts at different positions', () => {
+    // Two separate positions, each with a parent/child conflict
+    const captures = [
+      mockLayered('operator', 80, 2, 3, 0), // "!" as operator
+      mockLayered('comment.documentation', 102, 2, 3, 0), // "!" as doc marker
+      mockLayered('operator', 80, 17, 18, 0), // "/" as operator
+      mockLayered('comment.documentation', 102, 17, 18, 0), // "/" as doc marker
+    ];
+
+    const result = interleaveCaptures(captures);
+    expect(result).toHaveLength(2);
+    expect(result[0].name).toBe('comment.documentation');
+    expect(result[1].name).toBe('comment.documentation');
+  });
 });
