@@ -379,12 +379,19 @@ describe('createRegistries', () => {
   it('allows adding new custom predicates', () => {
     const { predicates: registry } = createRegistries({
       predicates: {
-        'starts-with?': ({ match, predicate: p }: any) => {
+        'starts-with?': ({ match, predicate: p }) => {
+          const captureName = p.operands[0];
+          const expected = p.operands[1];
+
+          if (captureName?.type !== 'capture' || expected?.type !== 'string') {
+            return true;
+          }
+
           const capture = match.captures.find(
-            (c: any) => c.name === p.operands[0]?.name,
+            (c) => c.name === captureName.name,
           );
 
-          return capture?.node.text.startsWith(p.operands[1]?.value);
+          return capture?.node.text.startsWith(expected.value) ?? false;
         },
       },
     });

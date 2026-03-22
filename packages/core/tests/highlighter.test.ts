@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { grammar, query } from '@bagrajs/test-utils';
 import type { Element } from 'hast';
-import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createHighlighter } from '@/highlighter';
 import type { Highlighter } from '@/types';
 
@@ -144,7 +144,7 @@ describe('codeToHtml', () => {
     });
   });
 
-  afterEach(() => {});
+  afterAll(() => hl?.dispose());
 
   it('highlights a simple SCSS variable declaration', () => {
     const html = hl.codeToHtml('scss', '$color: red;');
