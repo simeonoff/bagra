@@ -1,75 +1,34 @@
+import {
+  captureOp,
+  mockCapture,
+  mockMatch,
+  mockNode,
+  mockPoint,
+  mockPredicate,
+  stringOp,
+} from '@bagrajs/test-utils';
 import { describe, expect, it } from 'vitest';
-import type {
-  Node,
-  QueryCapture,
-  QueryMatch,
-  QueryPredicate,
-} from 'web-tree-sitter';
+import type { QueryPredicate } from 'web-tree-sitter';
 import { applyDirectives, applyDirectivesToCaptures } from '@/core/directives';
 import { filterMatchesByPredicates } from '@/core/predicates';
 import { createRegistries } from '@/core/registry';
-
-let nodeId = 0;
-
-function mockCapture(name: string, node: Node, patternIndex = 0): QueryCapture {
-  return { name, node, patternIndex };
-}
-
-function mockMatch(captures: QueryCapture[], patternIndex = 0): QueryMatch {
-  return { patternIndex, captures };
-}
-
-function predicate(
-  operator: string,
-  ...operands: Array<
-    { type: 'capture'; name: string } | { type: 'string'; value: string }
-  >
-): QueryPredicate {
-  return { operator, operands };
-}
-
-function captureOp(name: string) {
-  return { type: 'capture' as const, name };
-}
-
-function stringOp(value: string) {
-  return { type: 'string' as const, value };
-}
-
-function mockNodeWithPos(
-  text: string,
-  startIndex: number,
-  endIndex: number,
-  startRow: number,
-  startCol: number,
-  endRow: number,
-  endCol: number,
-) {
-  return {
-    id: nodeId++,
-    text,
-    type: 'template_string',
-    parent: null,
-    startIndex,
-    endIndex,
-    startPosition: { row: startRow, column: startCol },
-    endPosition: { row: endRow, column: endCol },
-    children: [],
-    childCount: 0,
-  } as unknown as Node;
-}
 
 describe('offset! directive', () => {
   const { directives } = createRegistries();
 
   it('trims backticks with (0 1 0 -1)', () => {
-    const node = mockNodeWithPos('`hello`', 10, 17, 0, 10, 0, 17);
+    const node = mockNode(10, 17, {
+      text: '`hello`',
+      type: 'template_string',
+      startPosition: mockPoint(0, 10),
+      endPosition: mockPoint(0, 17),
+    });
     const capture = mockCapture('injection.content', node);
     const match = mockMatch([capture]);
 
     const predicatesByPattern: QueryPredicate[][] = [
       [
-        predicate(
+        mockPredicate(
           'offset!',
           captureOp('injection.content'),
           stringOp('0'),
@@ -89,13 +48,18 @@ describe('offset! directive', () => {
   });
 
   it('trims multiple characters with (0 2 0 -2)', () => {
-    const node = mockNodeWithPos('[[content]]', 0, 11, 0, 0, 0, 11);
+    const node = mockNode(0, 11, {
+      text: '[[content]]',
+      type: 'template_string',
+      startPosition: mockPoint(0, 0),
+      endPosition: mockPoint(0, 11),
+    });
     const capture = mockCapture('content', node);
     const match = mockMatch([capture]);
 
     const predicatesByPattern: QueryPredicate[][] = [
       [
-        predicate(
+        mockPredicate(
           'offset!',
           captureOp('content'),
           stringOp('0'),
@@ -113,13 +77,18 @@ describe('offset! directive', () => {
   });
 
   it('handles start-only trim (0 1 0 0)', () => {
-    const node = mockNodeWithPos('`hello', 5, 11, 0, 5, 0, 11);
+    const node = mockNode(5, 11, {
+      text: '`hello',
+      type: 'template_string',
+      startPosition: mockPoint(0, 5),
+      endPosition: mockPoint(0, 11),
+    });
     const capture = mockCapture('content', node);
     const match = mockMatch([capture]);
 
     const predicatesByPattern: QueryPredicate[][] = [
       [
-        predicate(
+        mockPredicate(
           'offset!',
           captureOp('content'),
           stringOp('0'),
@@ -137,13 +106,18 @@ describe('offset! directive', () => {
   });
 
   it('handles end-only trim (0 0 0 -1)', () => {
-    const node = mockNodeWithPos('hello`', 5, 11, 0, 5, 0, 11);
+    const node = mockNode(5, 11, {
+      text: 'hello`',
+      type: 'template_string',
+      startPosition: mockPoint(0, 5),
+      endPosition: mockPoint(0, 11),
+    });
     const capture = mockCapture('content', node);
     const match = mockMatch([capture]);
 
     const predicatesByPattern: QueryPredicate[][] = [
       [
-        predicate(
+        mockPredicate(
           'offset!',
           captureOp('content'),
           stringOp('0'),
@@ -161,13 +135,18 @@ describe('offset! directive', () => {
   });
 
   it('handles zero deltas (no change)', () => {
-    const node = mockNodeWithPos('hello', 5, 10, 0, 5, 0, 10);
+    const node = mockNode(5, 10, {
+      text: 'hello',
+      type: 'template_string',
+      startPosition: mockPoint(0, 5),
+      endPosition: mockPoint(0, 10),
+    });
     const capture = mockCapture('content', node);
     const match = mockMatch([capture]);
 
     const predicatesByPattern: QueryPredicate[][] = [
       [
-        predicate(
+        mockPredicate(
           'offset!',
           captureOp('content'),
           stringOp('0'),
@@ -185,13 +164,18 @@ describe('offset! directive', () => {
   });
 
   it('preserves node prototype (children, type, etc.)', () => {
-    const node = mockNodeWithPos('`hello`', 10, 17, 0, 10, 0, 17);
+    const node = mockNode(10, 17, {
+      text: '`hello`',
+      type: 'template_string',
+      startPosition: mockPoint(0, 10),
+      endPosition: mockPoint(0, 17),
+    });
     const capture = mockCapture('injection.content', node);
     const match = mockMatch([capture]);
 
     const predicatesByPattern: QueryPredicate[][] = [
       [
-        predicate(
+        mockPredicate(
           'offset!',
           captureOp('injection.content'),
           stringOp('0'),
@@ -209,13 +193,18 @@ describe('offset! directive', () => {
   });
 
   it('adjusts row deltas on startPosition/endPosition', () => {
-    const node = mockNodeWithPos('multiline', 0, 50, 1, 5, 3, 10);
+    const node = mockNode(0, 50, {
+      text: 'multiline',
+      type: 'template_string',
+      startPosition: mockPoint(1, 5),
+      endPosition: mockPoint(3, 10),
+    });
     const capture = mockCapture('content', node);
     const match = mockMatch([capture]);
 
     const predicatesByPattern: QueryPredicate[][] = [
       [
-        predicate(
+        mockPredicate(
           'offset!',
           captureOp('content'),
           stringOp('1'),
@@ -237,12 +226,17 @@ describe('applyDirectivesToCaptures', () => {
   const { directives } = createRegistries();
 
   it('applies offset! to individual captures', () => {
-    const node = mockNodeWithPos('`hello`', 10, 17, 0, 10, 0, 17);
+    const node = mockNode(10, 17, {
+      text: '`hello`',
+      type: 'template_string',
+      startPosition: mockPoint(0, 10),
+      endPosition: mockPoint(0, 17),
+    });
     const capture = mockCapture('injection.content', node, 0);
 
     const predicatesByPattern: QueryPredicate[][] = [
       [
-        predicate(
+        mockPredicate(
           'offset!',
           captureOp('injection.content'),
           stringOp('0'),
@@ -264,13 +258,18 @@ describe('directives run before predicates', () => {
   it('predicate sees adjusted node after directive', () => {
     const { predicates, directives } = createRegistries();
 
-    const node = mockNodeWithPos('`CSS_CODE`', 0, 10, 0, 0, 0, 10);
+    const node = mockNode(0, 10, {
+      text: '`CSS_CODE`',
+      type: 'template_string',
+      startPosition: mockPoint(0, 0),
+      endPosition: mockPoint(0, 10),
+    });
     const capture = mockCapture('content', node, 0);
     const match = mockMatch([capture]);
 
     const predicatesByPattern: QueryPredicate[][] = [
       [
-        predicate(
+        mockPredicate(
           'offset!',
           captureOp('content'),
           stringOp('0'),
@@ -278,7 +277,7 @@ describe('directives run before predicates', () => {
           stringOp('0'),
           stringOp('-1'),
         ),
-        predicate('lua-match?', captureOp('content'), stringOp('^`')),
+        mockPredicate('lua-match?', captureOp('content'), stringOp('^`')),
       ],
     ];
 

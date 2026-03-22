@@ -1,43 +1,13 @@
+import {
+  highlightEnd as end,
+  lineEnd,
+  lineStart,
+  mockCaptureInline as mockCapture,
+  source,
+  highlightStart as start,
+} from '@bagrajs/test-utils';
 import { describe, expect, it } from 'vitest';
-import type { QueryCapture } from 'web-tree-sitter';
 import { generateEvents } from '@/highlight/events';
-import type { HighlightEvent } from '@/types';
-
-/**
- * Helper to create a mock QueryCapture for the events generator.
- */
-function mockCapture(
-  name: string,
-  startIndex: number,
-  endIndex: number,
-): QueryCapture {
-  return {
-    name,
-    patternIndex: 0,
-    node: { id: startIndex, startIndex, endIndex } as any,
-  };
-}
-
-/** Shorthand helpers for asserting events */
-function lineStart(): HighlightEvent {
-  return { type: 'line-start' };
-}
-
-function lineEnd(): HighlightEvent {
-  return { type: 'line-end' };
-}
-
-function start(captureName: string): HighlightEvent {
-  return { type: 'start', captureName };
-}
-
-function end(): HighlightEvent {
-  return { type: 'end' };
-}
-
-function source(s: number, e: number): HighlightEvent {
-  return { type: 'source', start: s, end: e };
-}
 
 describe('generateEvents — single line', () => {
   it('wraps empty source in a single empty line', () => {

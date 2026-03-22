@@ -1,54 +1,19 @@
+import {
+  captureOp,
+  mockCapture,
+  mockMatch,
+  mockNode,
+  mockPredicate,
+  stringOp,
+} from '@bagrajs/test-utils';
 import { describe, expect, it } from 'vitest';
-import type {
-  Node,
-  QueryCapture,
-  QueryMatch,
-  QueryPredicate,
-} from 'web-tree-sitter';
+import type { QueryCapture, QueryPredicate } from 'web-tree-sitter';
 import {
   filterCapturesByPredicates,
   filterMatchesByPredicates,
   luaPatternToRegex,
 } from '@/core/predicates';
 import { createRegistries } from '@/core/registry';
-
-let nodeId = 0;
-
-function mockNode(text: string, opts?: { type?: string; parent?: Node }): Node {
-  return {
-    id: nodeId++,
-    text,
-    type: opts?.type ?? 'identifier',
-    parent: opts?.parent ?? null,
-    startIndex: 0,
-    endIndex: text.length,
-  } as unknown as Node;
-}
-
-function mockCapture(name: string, node: Node, patternIndex = 0): QueryCapture {
-  return { name, node, patternIndex };
-}
-
-function mockMatch(captures: QueryCapture[], patternIndex = 0): QueryMatch {
-  return { patternIndex, captures };
-}
-
-function predicate(
-  operator: string,
-  ...operands: Array<
-    { type: 'capture'; name: string } | { type: 'string'; value: string }
-  >
-): QueryPredicate {
-  return { operator, operands };
-}
-
-function captureOp(name: string) {
-  return { type: 'capture' as const, name };
-}
-
-function stringOp(value: string) {
-  return { type: 'string' as const, value };
-}
 
 describe('luaPatternToRegex', () => {
   it('converts %d to \\d', () => {
@@ -111,10 +76,10 @@ describe('lua-match? predicate', () => {
   const { predicates: registry } = createRegistries();
 
   it('keeps matches where the pattern matches', () => {
-    const node = mockNode('MyComponent');
+    const node = mockNode(0, 11, { text: 'MyComponent' });
     const match = mockMatch([mockCapture('tag', node)]);
     const predicates: QueryPredicate[][] = [
-      [predicate('lua-match?', captureOp('tag'), stringOp('^[A-Z]'))],
+      [mockPredicate('lua-match?', captureOp('tag'), stringOp('^[A-Z]'))],
     ];
 
     const result = filterMatchesByPredicates([match], predicates, registry);
@@ -122,10 +87,10 @@ describe('lua-match? predicate', () => {
   });
 
   it('filters out matches where the pattern does not match', () => {
-    const node = mockNode('div');
+    const node = mockNode(0, 3, { text: 'div' });
     const match = mockMatch([mockCapture('tag', node)]);
     const predicates: QueryPredicate[][] = [
-      [predicate('lua-match?', captureOp('tag'), stringOp('^[A-Z]'))],
+      [mockPredicate('lua-match?', captureOp('tag'), stringOp('^[A-Z]'))],
     ];
 
     const result = filterMatchesByPredicates([match], predicates, registry);
@@ -133,11 +98,11 @@ describe('lua-match? predicate', () => {
   });
 
   it('handles Lua %d class in patterns', () => {
-    const node = mockNode('CONST_42');
+    const node = mockNode(0, 8, { text: 'CONST_42' });
     const match = mockMatch([mockCapture('constant', node)]);
     const predicates: QueryPredicate[][] = [
       [
-        predicate(
+        mockPredicate(
           'lua-match?',
           captureOp('constant'),
           stringOp('^_*[A-Z][A-Z%d_]*$'),
@@ -150,8 +115,8 @@ describe('lua-match? predicate', () => {
   });
 
   it('handles JSDoc comment detection pattern', () => {
-    const jsdocNode = mockNode('/** @param name */');
-    const nonJsdocNode = mockNode('/* regular comment */');
+    const jsdocNode = mockNode(0, 18, { text: '/** @param name */' });
+    const nonJsdocNode = mockNode(0, 20, { text: '/* regular comment */' });
 
     const jsdocMatch = mockMatch([mockCapture('_jsdoc_comment', jsdocNode)]);
     const regularMatch = mockMatch(
@@ -161,7 +126,7 @@ describe('lua-match? predicate', () => {
 
     const predicates: QueryPredicate[][] = [
       [
-        predicate(
+        mockPredicate(
           'lua-match?',
           captureOp('_jsdoc_comment'),
           stringOp('^/[*][*][^*].*[*]/$'),
@@ -197,10 +162,10 @@ describe('not-lua-match? predicate', () => {
   const { predicates: registry } = createRegistries();
 
   it('keeps matches where the pattern does NOT match', () => {
-    const node = mockNode('lowercase');
+    const node = mockNode(0, 9, { text: 'lowercase' });
     const match = mockMatch([mockCapture('name', node)]);
     const predicates: QueryPredicate[][] = [
-      [predicate('not-lua-match?', captureOp('name'), stringOp('^[A-Z]'))],
+      [mockPredicate('not-lua-match?', captureOp('name'), stringOp('^[A-Z]'))],
     ];
 
     const result = filterMatchesByPredicates([match], predicates, registry);
@@ -208,10 +173,10 @@ describe('not-lua-match? predicate', () => {
   });
 
   it('filters out matches where the pattern matches', () => {
-    const node = mockNode('Uppercase');
+    const node = mockNode(0, 9, { text: 'Uppercase' });
     const match = mockMatch([mockCapture('name', node)]);
     const predicates: QueryPredicate[][] = [
-      [predicate('not-lua-match?', captureOp('name'), stringOp('^[A-Z]'))],
+      [mockPredicate('not-lua-match?', captureOp('name'), stringOp('^[A-Z]'))],
     ];
 
     const result = filterMatchesByPredicates([match], predicates, registry);
@@ -223,10 +188,10 @@ describe('contains? predicate', () => {
   const { predicates: registry } = createRegistries();
 
   it('keeps matches where node text contains the substring', () => {
-    const node = mockNode('hello world');
+    const node = mockNode(0, 11, { text: 'hello world' });
     const match = mockMatch([mockCapture('text', node)]);
     const predicates: QueryPredicate[][] = [
-      [predicate('contains?', captureOp('text'), stringOp('world'))],
+      [mockPredicate('contains?', captureOp('text'), stringOp('world'))],
     ];
 
     const result = filterMatchesByPredicates([match], predicates, registry);
@@ -234,10 +199,10 @@ describe('contains? predicate', () => {
   });
 
   it('filters out matches where node text does not contain the substring', () => {
-    const node = mockNode('hello');
+    const node = mockNode(0, 5, { text: 'hello' });
     const match = mockMatch([mockCapture('text', node)]);
     const predicates: QueryPredicate[][] = [
-      [predicate('contains?', captureOp('text'), stringOp('world'))],
+      [mockPredicate('contains?', captureOp('text'), stringOp('world'))],
     ];
 
     const result = filterMatchesByPredicates([match], predicates, registry);
@@ -245,11 +210,11 @@ describe('contains? predicate', () => {
   });
 
   it('requires all substrings to be present', () => {
-    const node = mockNode('hello world');
+    const node = mockNode(0, 11, { text: 'hello world' });
     const match = mockMatch([mockCapture('text', node)]);
     const predicates: QueryPredicate[][] = [
       [
-        predicate(
+        mockPredicate(
           'contains?',
           captureOp('text'),
           stringOp('hello'),
@@ -267,13 +232,20 @@ describe('has-ancestor? predicate', () => {
   const { predicates: registry } = createRegistries();
 
   it('keeps matches where ancestor exists', () => {
-    const grandparent = mockNode('', { type: 'function_declaration' });
-    const parent = mockNode('', { type: 'parameters', parent: grandparent });
-    const node = mockNode('x', { type: 'identifier', parent });
+    const grandparent = mockNode(0, 0, {
+      text: '',
+      type: 'function_declaration',
+    });
+    const parent = mockNode(0, 0, {
+      text: '',
+      type: 'parameters',
+      parent: grandparent,
+    });
+    const node = mockNode(0, 1, { text: 'x', type: 'identifier', parent });
     const match = mockMatch([mockCapture('name', node)]);
     const predicates: QueryPredicate[][] = [
       [
-        predicate(
+        mockPredicate(
           'has-ancestor?',
           captureOp('name'),
           stringOp('function_declaration'),
@@ -286,12 +258,12 @@ describe('has-ancestor? predicate', () => {
   });
 
   it('filters out matches where ancestor does not exist', () => {
-    const parent = mockNode('', { type: 'program' });
-    const node = mockNode('x', { type: 'identifier', parent });
+    const parent = mockNode(0, 0, { text: '', type: 'program' });
+    const node = mockNode(0, 1, { text: 'x', type: 'identifier', parent });
     const match = mockMatch([mockCapture('name', node)]);
     const predicates: QueryPredicate[][] = [
       [
-        predicate(
+        mockPredicate(
           'has-ancestor?',
           captureOp('name'),
           stringOp('function_declaration'),
@@ -308,12 +280,12 @@ describe('has-parent? predicate', () => {
   const { predicates: registry } = createRegistries();
 
   it('keeps matches where immediate parent type matches', () => {
-    const parent = mockNode('', { type: 'function_declaration' });
-    const node = mockNode('greet', { type: 'identifier', parent });
+    const parent = mockNode(0, 0, { text: '', type: 'function_declaration' });
+    const node = mockNode(0, 5, { text: 'greet', type: 'identifier', parent });
     const match = mockMatch([mockCapture('name', node)]);
     const predicates: QueryPredicate[][] = [
       [
-        predicate(
+        mockPredicate(
           'has-parent?',
           captureOp('name'),
           stringOp('function_declaration'),
@@ -326,12 +298,12 @@ describe('has-parent? predicate', () => {
   });
 
   it('filters out when parent type does not match', () => {
-    const parent = mockNode('', { type: 'variable_declaration' });
-    const node = mockNode('x', { type: 'identifier', parent });
+    const parent = mockNode(0, 0, { text: '', type: 'variable_declaration' });
+    const node = mockNode(0, 1, { text: 'x', type: 'identifier', parent });
     const match = mockMatch([mockCapture('name', node)]);
     const predicates: QueryPredicate[][] = [
       [
-        predicate(
+        mockPredicate(
           'has-parent?',
           captureOp('name'),
           stringOp('function_declaration'),
@@ -344,13 +316,20 @@ describe('has-parent? predicate', () => {
   });
 
   it('does not match grandparent (only immediate parent)', () => {
-    const grandparent = mockNode('', { type: 'function_declaration' });
-    const parent = mockNode('', { type: 'parameters', parent: grandparent });
-    const node = mockNode('x', { type: 'identifier', parent });
+    const grandparent = mockNode(0, 0, {
+      text: '',
+      type: 'function_declaration',
+    });
+    const parent = mockNode(0, 0, {
+      text: '',
+      type: 'parameters',
+      parent: grandparent,
+    });
+    const node = mockNode(0, 1, { text: 'x', type: 'identifier', parent });
     const match = mockMatch([mockCapture('name', node)]);
     const predicates: QueryPredicate[][] = [
       [
-        predicate(
+        mockPredicate(
           'has-parent?',
           captureOp('name'),
           stringOp('function_declaration'),
@@ -386,10 +365,10 @@ describe('createRegistries', () => {
       predicates: { 'lua-match?': () => false },
     });
 
-    const node = mockNode('ABC');
+    const node = mockNode(0, 3, { text: 'ABC' });
     const match = mockMatch([mockCapture('name', node)]);
     const predicates: QueryPredicate[][] = [
-      [predicate('lua-match?', captureOp('name'), stringOp('^[A-Z]'))],
+      [mockPredicate('lua-match?', captureOp('name'), stringOp('^[A-Z]'))],
     ];
 
     // Custom handler always returns false
@@ -410,10 +389,10 @@ describe('createRegistries', () => {
       },
     });
 
-    const node = mockNode('test_value');
+    const node = mockNode(0, 10, { text: 'test_value' });
     const match = mockMatch([mockCapture('name', node)]);
     const predicates: QueryPredicate[][] = [
-      [predicate('starts-with?', captureOp('name'), stringOp('test'))],
+      [mockPredicate('starts-with?', captureOp('name'), stringOp('test'))],
     ];
 
     const result = filterMatchesByPredicates([match], predicates, registry);
@@ -425,12 +404,12 @@ describe('multiple predicates', () => {
   const { predicates: registry } = createRegistries();
 
   it('requires ALL predicates to pass (AND logic)', () => {
-    const node = mockNode('MyComponent');
+    const node = mockNode(0, 11, { text: 'MyComponent' });
     const match = mockMatch([mockCapture('tag', node)]);
     const predicates: QueryPredicate[][] = [
       [
-        predicate('lua-match?', captureOp('tag'), stringOp('^[A-Z]')),
-        predicate('contains?', captureOp('tag'), stringOp('Component')),
+        mockPredicate('lua-match?', captureOp('tag'), stringOp('^[A-Z]')),
+        mockPredicate('contains?', captureOp('tag'), stringOp('Component')),
       ],
     ];
 
@@ -439,12 +418,12 @@ describe('multiple predicates', () => {
   });
 
   it('filters when any predicate fails', () => {
-    const node = mockNode('MyWidget');
+    const node = mockNode(0, 8, { text: 'MyWidget' });
     const match = mockMatch([mockCapture('tag', node)]);
     const predicates: QueryPredicate[][] = [
       [
-        predicate('lua-match?', captureOp('tag'), stringOp('^[A-Z]')),
-        predicate('contains?', captureOp('tag'), stringOp('Component')),
+        mockPredicate('lua-match?', captureOp('tag'), stringOp('^[A-Z]')),
+        mockPredicate('contains?', captureOp('tag'), stringOp('Component')),
       ],
     ];
 
@@ -457,11 +436,11 @@ describe('unknown predicates', () => {
   const { predicates: registry } = createRegistries();
 
   it('treats unknown predicates as always-true', () => {
-    const node = mockNode('test');
+    const node = mockNode(0, 4, { text: 'test' });
     const match = mockMatch([mockCapture('name', node)]);
     const predicates: QueryPredicate[][] = [
       [
-        predicate(
+        mockPredicate(
           'some-unknown-predicate?',
           captureOp('name'),
           stringOp('arg'),
@@ -478,14 +457,14 @@ describe('filterCapturesByPredicates', () => {
   const { predicates: registry } = createRegistries();
 
   it('filters captures by their pattern predicates', () => {
-    const goodNode = mockNode('MyComponent');
-    const badNode = mockNode('div');
+    const goodNode = mockNode(0, 11, { text: 'MyComponent' });
+    const badNode = mockNode(0, 3, { text: 'div' });
     const captures: QueryCapture[] = [
       mockCapture('tag', goodNode, 0),
       mockCapture('tag', badNode, 0),
     ];
     const predicates: QueryPredicate[][] = [
-      [predicate('lua-match?', captureOp('tag'), stringOp('^[A-Z]'))],
+      [mockPredicate('lua-match?', captureOp('tag'), stringOp('^[A-Z]'))],
     ];
 
     const result = filterCapturesByPredicates(captures, predicates, registry);
@@ -494,7 +473,7 @@ describe('filterCapturesByPredicates', () => {
   });
 
   it('passes through captures whose pattern has no predicates', () => {
-    const node = mockNode('anything');
+    const node = mockNode(0, 8, { text: 'anything' });
     const captures: QueryCapture[] = [mockCapture('name', node, 0)];
     const predicates: QueryPredicate[][] = [[]];
 

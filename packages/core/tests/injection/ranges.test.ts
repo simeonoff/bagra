@@ -1,39 +1,10 @@
+import {
+  mockNode,
+  mockPoint as point,
+  mockRange as range,
+} from '@bagrajs/test-utils';
 import { describe, expect, it } from 'vitest';
-import type { Node, Point, Range } from 'web-tree-sitter';
 import { FULL_DOCUMENT_RANGE, intersectRanges } from '@/injection/ranges';
-
-let nodeId = 0;
-
-function point(row: number, column: number): Point {
-  return { row, column };
-}
-
-function range(
-  startIndex: number,
-  endIndex: number,
-  startPosition: Point = point(0, startIndex),
-  endPosition: Point = point(0, endIndex),
-): Range {
-  return { startIndex, endIndex, startPosition, endPosition };
-}
-
-function mockNode(
-  startIndex: number,
-  endIndex: number,
-  children: Node[] = [],
-  startPos?: Point,
-  endPos?: Point,
-): Node {
-  return {
-    id: nodeId++,
-    startIndex,
-    endIndex,
-    startPosition: startPos ?? point(0, startIndex),
-    endPosition: endPos ?? point(0, endIndex),
-    childCount: children.length,
-    children,
-  } as unknown as Node;
-}
 
 describe('intersectRanges', () => {
   it('returns the full node range when includeChildren is true', () => {
@@ -55,7 +26,7 @@ describe('intersectRanges', () => {
     //  child:      [18 ... 25]
     //  result: [10..18]  [25..40]
     const child = mockNode(18, 25);
-    const node = mockNode(10, 40, [child]);
+    const node = mockNode(10, 40, { children: [child] });
 
     const result = intersectRanges([FULL_DOCUMENT_RANGE], [node], false);
 
@@ -69,7 +40,7 @@ describe('intersectRanges', () => {
     //  result: [10..15] [20..30] [35..50]
     const child1 = mockNode(15, 20);
     const child2 = mockNode(30, 35);
-    const node = mockNode(10, 50, [child1, child2]);
+    const node = mockNode(10, 50, { children: [child1, child2] });
 
     const result = intersectRanges([FULL_DOCUMENT_RANGE], [node], false);
 
@@ -81,7 +52,7 @@ describe('intersectRanges', () => {
     //  child: [10 ... 18]
     //  result:           [18..30]
     const child = mockNode(10, 18);
-    const node = mockNode(10, 30, [child]);
+    const node = mockNode(10, 30, { children: [child] });
 
     const result = intersectRanges([FULL_DOCUMENT_RANGE], [node], false);
 
@@ -93,7 +64,7 @@ describe('intersectRanges', () => {
     //  child:          [22 ... 30]
     //  result: [10..22]
     const child = mockNode(22, 30);
-    const node = mockNode(10, 30, [child]);
+    const node = mockNode(10, 30, { children: [child] });
 
     const result = intersectRanges([FULL_DOCUMENT_RANGE], [node], false);
 
@@ -107,7 +78,7 @@ describe('intersectRanges', () => {
     //  result: (empty — children cover the entire node)
     const child1 = mockNode(10, 20);
     const child2 = mockNode(20, 30);
-    const node = mockNode(10, 30, [child1, child2]);
+    const node = mockNode(10, 30, { children: [child1, child2] });
 
     const result = intersectRanges([FULL_DOCUMENT_RANGE], [node], false);
 
@@ -127,8 +98,8 @@ describe('intersectRanges', () => {
     //  node1: [10 ..... 20]  child: [13..17]
     //  node2: [30 ..... 40]  child: [33..37]
     //  result: [10..13] [17..20] [30..33] [37..40]
-    const node1 = mockNode(10, 20, [mockNode(13, 17)]);
-    const node2 = mockNode(30, 40, [mockNode(33, 37)]);
+    const node1 = mockNode(10, 20, { children: [mockNode(13, 17)] });
+    const node2 = mockNode(30, 40, { children: [mockNode(33, 37)] });
 
     const result = intersectRanges(
       [FULL_DOCUMENT_RANGE],
@@ -184,7 +155,7 @@ describe('intersectRanges', () => {
     //  gaps:    [10..18]  [22..30]
     //  clipped: [12..18]  [22..28]
     const child = mockNode(18, 22);
-    const node = mockNode(10, 30, [child]);
+    const node = mockNode(10, 30, { children: [child] });
     const parentRanges = [range(12, 28)];
 
     const result = intersectRanges(parentRanges, [node], false);
@@ -212,7 +183,7 @@ describe('intersectRanges', () => {
     //  gap [12..15] falls outside both parents — dropped
     //  clip gap2 to parent2: [22..30]
     const child = mockNode(15, 20);
-    const node = mockNode(10, 30, [child]);
+    const node = mockNode(10, 30, { children: [child] });
     const parentRanges = [range(5, 12), range(22, 35)];
 
     const result = intersectRanges(parentRanges, [node], false);
@@ -228,7 +199,7 @@ describe('intersectRanges', () => {
     //  result: [0..5] [15..33] [42..48]
     const child1 = mockNode(5, 15);
     const child2 = mockNode(33, 42);
-    const node = mockNode(0, 48, [child1, child2]);
+    const node = mockNode(0, 48, { children: [child1, child2] });
 
     const result = intersectRanges([FULL_DOCUMENT_RANGE], [node], false);
 
@@ -236,13 +207,10 @@ describe('intersectRanges', () => {
   });
 
   it('preserves row/column positions from nodes', () => {
-    const node = mockNode(
-      10,
-      30,
-      [],
-      point(1, 5), // startPosition
-      point(2, 10), // endPosition
-    );
+    const node = mockNode(10, 30, {
+      startPosition: point(1, 5),
+      endPosition: point(2, 10),
+    });
 
     const result = intersectRanges([FULL_DOCUMENT_RANGE], [node], true);
 
@@ -257,8 +225,15 @@ describe('intersectRanges', () => {
   });
 
   it('uses child positions when excluding children', () => {
-    const child = mockNode(18, 25, [], point(1, 8), point(1, 15));
-    const node = mockNode(10, 40, [child], point(1, 0), point(2, 5));
+    const child = mockNode(18, 25, {
+      startPosition: point(1, 8),
+      endPosition: point(1, 15),
+    });
+    const node = mockNode(10, 40, {
+      children: [child],
+      startPosition: point(1, 0),
+      endPosition: point(2, 5),
+    });
 
     const result = intersectRanges([FULL_DOCUMENT_RANGE], [node], false);
 

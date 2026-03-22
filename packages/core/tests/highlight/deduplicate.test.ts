@@ -1,8 +1,7 @@
+import { mockCapture, mockNode } from '@bagrajs/test-utils';
 import { describe, expect, it } from 'vitest';
 import { interleaveCaptures } from '@/highlight/deduplicate';
 import type { LayeredCapture } from '@/highlight/types';
-
-let nodeId = 0;
 
 /**
  * Create a mock {@link LayeredCapture} with the fields that interleaving reads.
@@ -16,11 +15,11 @@ function mockLayered(
   id?: number,
 ): LayeredCapture {
   return {
-    capture: {
+    capture: mockCapture(
       name,
+      mockNode(startIndex, endIndex, { id }),
       patternIndex,
-      node: { id: id ?? nodeId++, startIndex, endIndex } as any,
-    },
+    ),
     depth,
   };
 }
@@ -47,10 +46,10 @@ describe('interleaveCaptures', () => {
   });
 
   it('keeps the last capture when two patterns match the same node', () => {
-    const sharedId = nodeId++;
-    const captures = [
-      mockLayered('variable', 0, 0, 5, 0, sharedId),
-      mockLayered('function', 1, 0, 5, 0, sharedId),
+    const sharedNode = mockNode(0, 5, { id: 999 });
+    const captures: LayeredCapture[] = [
+      { capture: mockCapture('variable', sharedNode, 0), depth: 0 },
+      { capture: mockCapture('function', sharedNode, 1), depth: 0 },
     ];
 
     const result = interleaveCaptures(captures);
@@ -59,11 +58,11 @@ describe('interleaveCaptures', () => {
   });
 
   it('keeps the last capture when three patterns match the same node', () => {
-    const sharedId = nodeId++;
-    const captures = [
-      mockLayered('variable', 0, 0, 8, 0, sharedId),
-      mockLayered('function', 1, 0, 8, 0, sharedId),
-      mockLayered('function.builtin', 2, 0, 8, 0, sharedId),
+    const sharedNode = mockNode(0, 8, { id: 998 });
+    const captures: LayeredCapture[] = [
+      { capture: mockCapture('variable', sharedNode, 0), depth: 0 },
+      { capture: mockCapture('function', sharedNode, 1), depth: 0 },
+      { capture: mockCapture('function.builtin', sharedNode, 2), depth: 0 },
     ];
 
     const result = interleaveCaptures(captures);
@@ -73,13 +72,13 @@ describe('interleaveCaptures', () => {
   });
 
   it('deduplicates each node independently', () => {
-    const nodeA = nodeId++;
-    const nodeB = nodeId++;
-    const captures = [
-      mockLayered('variable', 0, 0, 3, 0, nodeA),
-      mockLayered('keyword', 1, 0, 3, 0, nodeA),
-      mockLayered('variable', 0, 4, 7, 0, nodeB),
-      mockLayered('function', 1, 4, 7, 0, nodeB),
+    const nodeA = mockNode(0, 3, { id: 997 });
+    const nodeB = mockNode(4, 7, { id: 996 });
+    const captures: LayeredCapture[] = [
+      { capture: mockCapture('variable', nodeA, 0), depth: 0 },
+      { capture: mockCapture('keyword', nodeA, 1), depth: 0 },
+      { capture: mockCapture('variable', nodeB, 0), depth: 0 },
+      { capture: mockCapture('function', nodeB, 1), depth: 0 },
       mockLayered('string', 2, 10, 15),
     ];
 

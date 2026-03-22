@@ -1,5 +1,24 @@
 import { resolve } from 'node:path';
 
+export type { MockNodeOptions, PredicateOperand } from './mocks';
+export {
+  captureOp,
+  highlightEnd,
+  highlightStart,
+  lineEnd,
+  lineStart,
+  mockCapture,
+  mockCaptureInline,
+  mockMatch,
+  mockNode,
+  mockPoint,
+  mockPredicate,
+  mockRange,
+  resetNodeId,
+  source,
+  stringOp,
+} from './mocks';
+
 const FIXTURES = resolve(__dirname, '../fixtures');
 const GRAMMARS = resolve(FIXTURES, 'grammars');
 const QUERIES = resolve(FIXTURES, 'queries');

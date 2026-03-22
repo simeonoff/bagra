@@ -1,39 +1,6 @@
+import { mockCapture, mockMatch, mockNode } from '@bagrajs/test-utils';
 import { describe, expect, it } from 'vitest';
-import type { Node, QueryMatch } from 'web-tree-sitter';
 import { INJECTION, parseInjections } from '@/injection/parse';
-
-let nodeId = 0;
-
-/**
- * Create a mock {@link Node} with the fields that `parseInjections` reads.
- */
-function mockNode(startIndex: number, endIndex: number, text: string): Node {
-  return { startIndex, endIndex, text, id: nodeId++ } as unknown as Node;
-}
-
-/**
- * Create a mock {@link QueryMatch}.
- *
- * Captures are specified as `{ name, node }` pairs — the `patternIndex`
- * is filled in automatically.
- */
-function mockMatch(opts: {
-  captures?: Array<{ name: string; node: Node }>;
-  setProperties?: Record<string, string | null>;
-  patternIndex?: number;
-}): QueryMatch {
-  const patternIndex = opts.patternIndex ?? 0;
-
-  return {
-    patternIndex,
-    captures: (opts.captures ?? []).map((c) => ({
-      patternIndex,
-      name: c.name,
-      node: c.node,
-    })),
-    setProperties: opts.setProperties,
-  };
-}
 
 describe('parseInjections', () => {
   it('returns an empty array when given no matches', () => {
@@ -41,15 +8,15 @@ describe('parseInjections', () => {
   });
 
   it('returns an empty array when a match has no captures', () => {
-    const matches = [mockMatch({ captures: [] })];
+    const matches = [mockMatch([])];
     expect(parseInjections(matches, 'scss')).toEqual([]);
   });
 
   it('skips a match that has no @injection.content captures', () => {
     const matches = [
-      mockMatch({
-        captures: [{ name: INJECTION.LANGUAGE, node: mockNode(0, 4, 'html') }],
-      }),
+      mockMatch([
+        mockCapture(INJECTION.LANGUAGE, mockNode(0, 4, { text: 'html' })),
+      ]),
     ];
 
     expect(parseInjections(matches, 'scss')).toEqual([]);
@@ -57,12 +24,10 @@ describe('parseInjections', () => {
 
   it('skips a match when no language can be resolved', () => {
     const matches = [
-      mockMatch({
-        captures: [
-          { name: INJECTION.CONTENT, node: mockNode(0, 10, 'some code') },
-        ],
-        // no setProperties, no @injection.language capture
-      }),
+      mockMatch([
+        mockCapture(INJECTION.CONTENT, mockNode(0, 10, { text: 'some code' })),
+      ]),
+      // no setProperties, no @injection.language capture
     ];
 
     expect(parseInjections(matches, 'scss')).toEqual([]);
@@ -70,28 +35,23 @@ describe('parseInjections', () => {
 
   it('skips a match when @injection.language node text is empty', () => {
     const matches = [
-      mockMatch({
-        captures: [
-          { name: INJECTION.LANGUAGE, node: mockNode(0, 0, '') },
-          { name: INJECTION.CONTENT, node: mockNode(5, 15, 'some code') },
-        ],
-      }),
+      mockMatch([
+        mockCapture(INJECTION.LANGUAGE, mockNode(0, 0, { text: '' })),
+        mockCapture(INJECTION.CONTENT, mockNode(5, 15, { text: 'some code' })),
+      ]),
     ];
 
     expect(parseInjections(matches, 'scss')).toEqual([]);
   });
 
   it('resolves language from setProperties (static)', () => {
-    const contentNode = mockNode(
-      0,
-      46,
-      '<script>console.log("hello world!");</script>',
-    );
+    const contentNode = mockNode(0, 46, {
+      text: '<script>console.log("hello world!");</script>',
+    });
 
     const matches = [
-      mockMatch({
-        captures: [{ name: INJECTION.CONTENT, node: contentNode }],
-        setProperties: { [INJECTION.LANGUAGE]: 'javascript' },
+      mockMatch([mockCapture(INJECTION.CONTENT, contentNode)], 0, {
+        [INJECTION.LANGUAGE]: 'javascript',
       }),
     ];
 
@@ -102,16 +62,14 @@ describe('parseInjections', () => {
   });
 
   it('resolves language from @injection.language capture (dynamic)', () => {
-    const langNode = mockNode(0, 4, 'scss');
-    const contentNode = mockNode(10, 30, '$color: red;');
+    const langNode = mockNode(0, 4, { text: 'scss' });
+    const contentNode = mockNode(10, 30, { text: '$color: red;' });
 
     const matches = [
-      mockMatch({
-        captures: [
-          { name: INJECTION.LANGUAGE, node: langNode },
-          { name: INJECTION.CONTENT, node: contentNode },
-        ],
-      }),
+      mockMatch([
+        mockCapture(INJECTION.LANGUAGE, langNode),
+        mockCapture(INJECTION.CONTENT, contentNode),
+      ]),
     ];
 
     const result = parseInjections(matches, 'sassdoc');
@@ -121,15 +79,13 @@ describe('parseInjections', () => {
   });
 
   it('trims whitespace from dynamic @injection.language text', () => {
-    const langNode = mockNode(0, 8, '  scss  ');
-    const contentNode = mockNode(10, 30, '$color: red;');
+    const langNode = mockNode(0, 8, { text: '  scss  ' });
+    const contentNode = mockNode(10, 30, { text: '$color: red;' });
     const matches = [
-      mockMatch({
-        captures: [
-          { name: INJECTION.LANGUAGE, node: langNode },
-          { name: INJECTION.CONTENT, node: contentNode },
-        ],
-      }),
+      mockMatch([
+        mockCapture(INJECTION.LANGUAGE, langNode),
+        mockCapture(INJECTION.CONTENT, contentNode),
+      ]),
     ];
 
     const result = parseInjections(matches, 'sassdoc');
@@ -137,17 +93,18 @@ describe('parseInjections', () => {
   });
 
   it('dynamic capture takes priority over static setProperties language', () => {
-    const langNode = mockNode(0, 6, 'python');
-    const contentNode = mockNode(10, 30, 'console.log("hi")');
+    const langNode = mockNode(0, 6, { text: 'python' });
+    const contentNode = mockNode(10, 30, { text: 'console.log("hi")' });
 
     const matches = [
-      mockMatch({
-        captures: [
-          { name: INJECTION.LANGUAGE, node: langNode },
-          { name: INJECTION.CONTENT, node: contentNode },
+      mockMatch(
+        [
+          mockCapture(INJECTION.LANGUAGE, langNode),
+          mockCapture(INJECTION.CONTENT, contentNode),
         ],
-        setProperties: { [INJECTION.LANGUAGE]: 'javascript' },
-      }),
+        0,
+        { [INJECTION.LANGUAGE]: 'javascript' },
+      ),
     ];
 
     const result = parseInjections(matches, 'html');
@@ -157,12 +114,11 @@ describe('parseInjections', () => {
   });
 
   it('falls back to static setProperties when no capture is present', () => {
-    const contentNode = mockNode(10, 30, 'console.log("hi")');
+    const contentNode = mockNode(10, 30, { text: 'console.log("hi")' });
 
     const matches = [
-      mockMatch({
-        captures: [{ name: INJECTION.CONTENT, node: contentNode }],
-        setProperties: { [INJECTION.LANGUAGE]: 'javascript' },
+      mockMatch([mockCapture(INJECTION.CONTENT, contentNode)], 0, {
+        [INJECTION.LANGUAGE]: 'javascript',
       }),
     ];
 
@@ -173,11 +129,10 @@ describe('parseInjections', () => {
   });
 
   it('resolves injection.self to the current language', () => {
-    const contentNode = mockNode(0, 20, '$color: red;');
+    const contentNode = mockNode(0, 20, { text: '$color: red;' });
     const matches = [
-      mockMatch({
-        captures: [{ name: INJECTION.CONTENT, node: contentNode }],
-        setProperties: { [INJECTION.SELF]: null },
+      mockMatch([mockCapture(INJECTION.CONTENT, contentNode)], 0, {
+        [INJECTION.SELF]: null,
       }),
     ];
 
@@ -188,14 +143,11 @@ describe('parseInjections', () => {
   });
 
   it('sets includeChildren to true when injection.include-children is present', () => {
-    const contentNode = mockNode(0, 20, 'some code');
+    const contentNode = mockNode(0, 20, { text: 'some code' });
     const matches = [
-      mockMatch({
-        captures: [{ name: INJECTION.CONTENT, node: contentNode }],
-        setProperties: {
-          [INJECTION.LANGUAGE]: 'css',
-          [INJECTION.INCLUDE_CHILDREN]: null,
-        },
+      mockMatch([mockCapture(INJECTION.CONTENT, contentNode)], 0, {
+        [INJECTION.LANGUAGE]: 'css',
+        [INJECTION.INCLUDE_CHILDREN]: null,
       }),
     ];
 
@@ -204,11 +156,10 @@ describe('parseInjections', () => {
   });
 
   it('sets includeChildren to false when injection.include-children is absent', () => {
-    const contentNode = mockNode(0, 20, 'some code');
+    const contentNode = mockNode(0, 20, { text: 'some code' });
     const matches = [
-      mockMatch({
-        captures: [{ name: INJECTION.CONTENT, node: contentNode }],
-        setProperties: { [INJECTION.LANGUAGE]: 'css' },
+      mockMatch([mockCapture(INJECTION.CONTENT, contentNode)], 0, {
+        [INJECTION.LANGUAGE]: 'css',
       }),
     ];
 
@@ -217,11 +168,10 @@ describe('parseInjections', () => {
   });
 
   it('creates ranges from @injection.content captures', () => {
-    const contentNode = mockNode(10, 30, 'let x = 1;');
+    const contentNode = mockNode(10, 30, { text: 'let x = 1;' });
     const matches = [
-      mockMatch({
-        captures: [{ name: INJECTION.CONTENT, node: contentNode }],
-        setProperties: { [INJECTION.LANGUAGE]: 'javascript' },
+      mockMatch([mockCapture(INJECTION.CONTENT, contentNode)], 0, {
+        [INJECTION.LANGUAGE]: 'javascript',
       }),
     ];
 
@@ -233,17 +183,18 @@ describe('parseInjections', () => {
   });
 
   it('includes multiple @injection.content captures from one match as multiple ranges', () => {
-    const node1 = mockNode(10, 20, 'line 1');
-    const node2 = mockNode(25, 35, 'line 2');
+    const node1 = mockNode(10, 20, { text: 'line 1' });
+    const node2 = mockNode(25, 35, { text: 'line 2' });
 
     const matches = [
-      mockMatch({
-        captures: [
-          { name: INJECTION.CONTENT, node: node1 },
-          { name: INJECTION.CONTENT, node: node2 },
+      mockMatch(
+        [
+          mockCapture(INJECTION.CONTENT, node1),
+          mockCapture(INJECTION.CONTENT, node2),
         ],
-        setProperties: { [INJECTION.LANGUAGE]: 'css' },
-      }),
+        0,
+        { [INJECTION.LANGUAGE]: 'css' },
+      ),
     ];
 
     const result = parseInjections(matches, 'html');
@@ -263,16 +214,14 @@ describe('parseInjections', () => {
   });
 
   it('does not include @injection.language captures as ranges', () => {
-    const langNode = mockNode(0, 4, 'scss');
-    const contentNode = mockNode(10, 30, '$color: red;');
+    const langNode = mockNode(0, 4, { text: 'scss' });
+    const contentNode = mockNode(10, 30, { text: '$color: red;' });
 
     const matches = [
-      mockMatch({
-        captures: [
-          { name: INJECTION.LANGUAGE, node: langNode },
-          { name: INJECTION.CONTENT, node: contentNode },
-        ],
-      }),
+      mockMatch([
+        mockCapture(INJECTION.LANGUAGE, langNode),
+        mockCapture(INJECTION.CONTENT, contentNode),
+      ]),
     ];
 
     const result = parseInjections(matches, 'sassdoc');
@@ -282,31 +231,22 @@ describe('parseInjections', () => {
   });
 
   it('merges combined matches with the same language into one descriptor', () => {
-    const node1 = mockNode(10, 20, '.a { color: red; }');
-    const node2 = mockNode(50, 70, '.b { font-size: 12px; }');
-    const node3 = mockNode(100, 120, '.c { display: flex; }');
+    const node1 = mockNode(10, 20, { text: '.a { color: red; }' });
+    const node2 = mockNode(50, 70, { text: '.b { font-size: 12px; }' });
+    const node3 = mockNode(100, 120, { text: '.c { display: flex; }' });
 
     const matches = [
-      mockMatch({
-        captures: [{ name: INJECTION.CONTENT, node: node1 }],
-        setProperties: {
-          [INJECTION.LANGUAGE]: 'css',
-          [INJECTION.COMBINED]: null,
-        },
+      mockMatch([mockCapture(INJECTION.CONTENT, node1)], 0, {
+        [INJECTION.LANGUAGE]: 'css',
+        [INJECTION.COMBINED]: null,
       }),
-      mockMatch({
-        captures: [{ name: INJECTION.CONTENT, node: node2 }],
-        setProperties: {
-          [INJECTION.LANGUAGE]: 'css',
-          [INJECTION.COMBINED]: null,
-        },
+      mockMatch([mockCapture(INJECTION.CONTENT, node2)], 0, {
+        [INJECTION.LANGUAGE]: 'css',
+        [INJECTION.COMBINED]: null,
       }),
-      mockMatch({
-        captures: [{ name: INJECTION.CONTENT, node: node3 }],
-        setProperties: {
-          [INJECTION.LANGUAGE]: 'css',
-          [INJECTION.COMBINED]: null,
-        },
+      mockMatch([mockCapture(INJECTION.CONTENT, node3)], 0, {
+        [INJECTION.LANGUAGE]: 'css',
+        [INJECTION.COMBINED]: null,
       }),
     ];
 
@@ -321,23 +261,17 @@ describe('parseInjections', () => {
   });
 
   it('keeps combined groups separate when languages differ', () => {
-    const cssNode = mockNode(10, 30, '.a { color: red; }');
-    const jsNode = mockNode(50, 70, 'console.log("hi")');
+    const cssNode = mockNode(10, 30, { text: '.a { color: red; }' });
+    const jsNode = mockNode(50, 70, { text: 'console.log("hi")' });
 
     const matches = [
-      mockMatch({
-        captures: [{ name: INJECTION.CONTENT, node: cssNode }],
-        setProperties: {
-          [INJECTION.LANGUAGE]: 'css',
-          [INJECTION.COMBINED]: null,
-        },
+      mockMatch([mockCapture(INJECTION.CONTENT, cssNode)], 0, {
+        [INJECTION.LANGUAGE]: 'css',
+        [INJECTION.COMBINED]: null,
       }),
-      mockMatch({
-        captures: [{ name: INJECTION.CONTENT, node: jsNode }],
-        setProperties: {
-          [INJECTION.LANGUAGE]: 'javascript',
-          [INJECTION.COMBINED]: null,
-        },
+      mockMatch([mockCapture(INJECTION.CONTENT, jsNode)], 0, {
+        [INJECTION.LANGUAGE]: 'javascript',
+        [INJECTION.COMBINED]: null,
       }),
     ];
 
@@ -351,17 +285,15 @@ describe('parseInjections', () => {
   });
 
   it('keeps non-combined matches as separate descriptors even with same language', () => {
-    const node1 = mockNode(10, 20, '// comment 1');
-    const node2 = mockNode(30, 40, '// comment 2');
+    const node1 = mockNode(10, 20, { text: '// comment 1' });
+    const node2 = mockNode(30, 40, { text: '// comment 2' });
 
     const matches = [
-      mockMatch({
-        captures: [{ name: INJECTION.CONTENT, node: node1 }],
-        setProperties: { [INJECTION.LANGUAGE]: 'comment' },
+      mockMatch([mockCapture(INJECTION.CONTENT, node1)], 0, {
+        [INJECTION.LANGUAGE]: 'comment',
       }),
-      mockMatch({
-        captures: [{ name: INJECTION.CONTENT, node: node2 }],
-        setProperties: { [INJECTION.LANGUAGE]: 'comment' },
+      mockMatch([mockCapture(INJECTION.CONTENT, node2)], 0, {
+        [INJECTION.LANGUAGE]: 'comment',
       }),
     ];
 
@@ -373,28 +305,21 @@ describe('parseInjections', () => {
   });
 
   it('handles mixed combined and non-combined matches', () => {
-    const combinedNode1 = mockNode(10, 20, '.a {}');
-    const combinedNode2 = mockNode(50, 60, '.b {}');
-    const standaloneNode = mockNode(80, 100, 'let x = 1;');
+    const combinedNode1 = mockNode(10, 20, { text: '.a {}' });
+    const combinedNode2 = mockNode(50, 60, { text: '.b {}' });
+    const standaloneNode = mockNode(80, 100, { text: 'let x = 1;' });
 
     const matches = [
-      mockMatch({
-        captures: [{ name: INJECTION.CONTENT, node: combinedNode1 }],
-        setProperties: {
-          [INJECTION.LANGUAGE]: 'css',
-          [INJECTION.COMBINED]: null,
-        },
+      mockMatch([mockCapture(INJECTION.CONTENT, combinedNode1)], 0, {
+        [INJECTION.LANGUAGE]: 'css',
+        [INJECTION.COMBINED]: null,
       }),
-      mockMatch({
-        captures: [{ name: INJECTION.CONTENT, node: standaloneNode }],
-        setProperties: { [INJECTION.LANGUAGE]: 'javascript' },
+      mockMatch([mockCapture(INJECTION.CONTENT, standaloneNode)], 0, {
+        [INJECTION.LANGUAGE]: 'javascript',
       }),
-      mockMatch({
-        captures: [{ name: INJECTION.CONTENT, node: combinedNode2 }],
-        setProperties: {
-          [INJECTION.LANGUAGE]: 'css',
-          [INJECTION.COMBINED]: null,
-        },
+      mockMatch([mockCapture(INJECTION.CONTENT, combinedNode2)], 0, {
+        [INJECTION.LANGUAGE]: 'css',
+        [INJECTION.COMBINED]: null,
       }),
     ];
 
@@ -418,23 +343,22 @@ describe('parseInjections', () => {
     //       (code_line) @injection.content))
     //     (#set! injection.combined))
 
-    const langNode = mockNode(55, 59, 'scss');
-    const codeLine1 = mockNode(
-      62,
-      100,
-      '  $result: resolve-color("ice", #caf0f8);',
-    );
-    const codeLine2 = mockNode(101, 118, '  // => #caf0f8');
+    const langNode = mockNode(55, 59, { text: 'scss' });
+    const codeLine1 = mockNode(62, 100, {
+      text: '  $result: resolve-color("ice", #caf0f8);',
+    });
+    const codeLine2 = mockNode(101, 118, { text: '  // => #caf0f8' });
 
     const matches = [
-      mockMatch({
-        captures: [
-          { name: INJECTION.LANGUAGE, node: langNode },
-          { name: INJECTION.CONTENT, node: codeLine1 },
-          { name: INJECTION.CONTENT, node: codeLine2 },
+      mockMatch(
+        [
+          mockCapture(INJECTION.LANGUAGE, langNode),
+          mockCapture(INJECTION.CONTENT, codeLine1),
+          mockCapture(INJECTION.CONTENT, codeLine2),
         ],
-        setProperties: { [INJECTION.COMBINED]: null },
-      }),
+        0,
+        { [INJECTION.COMBINED]: null },
+      ),
     ];
 
     const result = parseInjections(matches, 'sassdoc');
@@ -451,29 +375,31 @@ describe('parseInjections', () => {
     // Two separate @example blocks in the same document,
     // both combined into one SCSS injection
 
-    const lang1 = mockNode(10, 14, 'scss');
-    const code1a = mockNode(20, 40, '  $a: 1;');
-    const code1b = mockNode(41, 55, '  $b: 2;');
+    const lang1 = mockNode(10, 14, { text: 'scss' });
+    const code1a = mockNode(20, 40, { text: '  $a: 1;' });
+    const code1b = mockNode(41, 55, { text: '  $b: 2;' });
 
-    const lang2 = mockNode(100, 104, 'scss');
-    const code2a = mockNode(110, 130, '  $c: 3;');
+    const lang2 = mockNode(100, 104, { text: 'scss' });
+    const code2a = mockNode(110, 130, { text: '  $c: 3;' });
 
     const matches = [
-      mockMatch({
-        captures: [
-          { name: INJECTION.LANGUAGE, node: lang1 },
-          { name: INJECTION.CONTENT, node: code1a },
-          { name: INJECTION.CONTENT, node: code1b },
+      mockMatch(
+        [
+          mockCapture(INJECTION.LANGUAGE, lang1),
+          mockCapture(INJECTION.CONTENT, code1a),
+          mockCapture(INJECTION.CONTENT, code1b),
         ],
-        setProperties: { [INJECTION.COMBINED]: null },
-      }),
-      mockMatch({
-        captures: [
-          { name: INJECTION.LANGUAGE, node: lang2 },
-          { name: INJECTION.CONTENT, node: code2a },
+        0,
+        { [INJECTION.COMBINED]: null },
+      ),
+      mockMatch(
+        [
+          mockCapture(INJECTION.LANGUAGE, lang2),
+          mockCapture(INJECTION.CONTENT, code2a),
         ],
-        setProperties: { [INJECTION.COMBINED]: null },
-      }),
+        0,
+        { [INJECTION.COMBINED]: null },
+      ),
     ];
 
     const result = parseInjections(matches, 'sassdoc');
