@@ -400,3 +400,84 @@ describe('TypeScript with ecma inheritance', () => {
     expect(capturedTokens.length).toBeGreaterThan(0);
   });
 });
+
+describe('Rust cross-capture predicates', () => {
+  let hl: Highlighter;
+
+  beforeAll(async () => {
+    hl = await createHighlighter({
+      languages: {
+        rust: {
+          grammar: grammar('rust'),
+          queries: {
+            highlights: query('rust', 'highlights'),
+            injections: query('rust', 'injections'),
+          },
+        },
+      },
+    });
+  });
+
+  afterAll(() => hl?.dispose());
+
+  it('highlights write! as function.macro, not keyword.exception', () => {
+    // The highlights query has:
+    //   (#contains? @_identifier "assert")  → @keyword.exception
+    // This predicate references @_identifier (a different capture in
+    // the same match). "write" does not contain "assert", so the match
+    // should be filtered out, and write! should get @function.macro
+    // from the generic macro_invocation pattern instead.
+    const source = 'write!(f, "hello")';
+    const tokens = hl.codeToTokens('rust', source);
+
+    const writeToken = tokens[0].find((t) => t.text === 'write');
+    expect(writeToken?.captures).toContain('function.macro');
+    expect(writeToken?.captures).not.toContain('keyword.exception');
+  });
+
+  it('highlights panic! as keyword.exception', () => {
+    // panic! matches (#eq? @_identifier "panic") → @keyword.exception
+    const source = 'panic!("error")';
+    const tokens = hl.codeToTokens('rust', source);
+
+    const panicToken = tokens[0].find((t) => t.text === 'panic');
+    expect(panicToken?.captures).toContain('keyword.exception');
+  });
+
+  it('highlights assert! as keyword.exception', () => {
+    // assert! matches (#contains? @_identifier "assert") → @keyword.exception
+    const source = 'assert!(true)';
+    const tokens = hl.codeToTokens('rust', source);
+
+    const assertToken = tokens[0].find((t) => t.text === 'assert');
+    expect(assertToken?.captures).toContain('keyword.exception');
+  });
+
+  it('highlights assert_eq! as keyword.exception', () => {
+    // assert_eq contains "assert" → @keyword.exception
+    const source = 'assert_eq!(1, 1)';
+    const tokens = hl.codeToTokens('rust', source);
+
+    const assertToken = tokens[0].find((t) => t.text === 'assert_eq');
+    expect(assertToken?.captures).toContain('keyword.exception');
+  });
+
+  it('highlights dbg! as keyword.debug', () => {
+    // dbg! matches (#eq? @_identifier "dbg") → @keyword.debug
+    const source = 'dbg!(42)';
+    const tokens = hl.codeToTokens('rust', source);
+
+    const dbgToken = tokens[0].find((t) => t.text === 'dbg');
+    expect(dbgToken?.captures).toContain('keyword.debug');
+  });
+
+  it('highlights println! as function.macro (not keyword.exception)', () => {
+    // println does not contain "assert" and is not "panic" or "dbg"
+    const source = 'println!("hello")';
+    const tokens = hl.codeToTokens('rust', source);
+
+    const printlnToken = tokens[0].find((t) => t.text === 'println');
+    expect(printlnToken?.captures).toContain('function.macro');
+    expect(printlnToken?.captures).not.toContain('keyword.exception');
+  });
+});

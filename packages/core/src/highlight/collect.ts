@@ -1,10 +1,7 @@
 import { logger } from '@bagrajs/logger';
 import type { QueryCapture, Range, Tree } from 'web-tree-sitter';
-import { applyDirectives, applyDirectivesToCaptures } from '@/core/directives';
-import {
-  filterCapturesByPredicates,
-  filterMatchesByPredicates,
-} from '@/core/predicates';
+import { applyDirectives } from '@/core/directives';
+import { filterMatchesByPredicates } from '@/core/predicates';
 import type { HighlightContext } from '@/highlight';
 import { interleaveCaptures } from '@/highlight/deduplicate';
 import type { LayeredCapture } from '@/highlight/types';
@@ -105,22 +102,25 @@ export function collectCaptures(
     const { predicates, directives } = ctx.registries;
 
     const highlightsQuery = loaded.queries.get('highlights');
-    let rawCaptures: QueryCapture[] = [];
+    const rawCaptures: QueryCapture[] = [];
 
     if (highlightsQuery) {
-      rawCaptures = highlightsQuery.captures(tree.rootNode);
+      const highlightMatches = highlightsQuery.matches(tree.rootNode);
+      applyDirectives(highlightMatches, highlightsQuery.predicates, directives);
 
-      applyDirectivesToCaptures(
-        rawCaptures,
-        highlightsQuery.predicates,
-        directives,
-      );
-
-      rawCaptures = filterCapturesByPredicates(
-        rawCaptures,
+      const filtered = filterMatchesByPredicates(
+        highlightMatches,
         highlightsQuery.predicates,
         predicates,
       );
+
+      for (const match of filtered) {
+        for (const capture of match.captures) {
+          if (!capture.name.startsWith('_')) {
+            rawCaptures.push(capture);
+          }
+        }
+      }
     }
 
     // Tag each capture with its depth
