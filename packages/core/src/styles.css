@@ -36,9 +36,6 @@
     ui-monospace, "Menlo", "Monaco", "Consolas", "Liberation Mono",
     "Courier New", monospace;
 
-  font-family: var(--bagra-font-family, var(--font-family-mono));
-  font-size: var(--bagra-font-size, 0.875em);
-  line-height: var(--bagra-line-height, 1.7);
   background: var(--bagra-bg, var(--base00));
   color: var(--bagra-fg, var(--base05));
   padding: 20px 0;
@@ -50,6 +47,9 @@
     counter-reset: line;
     padding: 0 20px;
     width: fit-content;
+    font-family: var(--bagra-font-family, var(--font-family-mono));
+    font-size: var(--bagra-font-size, 0.875em);
+    line-height: var(--bagra-line-height, 1.7);
   }
 
   .line {

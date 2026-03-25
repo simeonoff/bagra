@@ -2,7 +2,11 @@ import { logger } from '@bagrajs/logger';
 import { Language, Query } from 'web-tree-sitter';
 import { parseModeline, stripModeline } from '@/core/modeline';
 import { resolveQuery } from '@/core/queries';
-import type { LanguageDefinition, LanguageQueries, QueryContent } from '@/core/types';
+import type {
+  LanguageDefinition,
+  LanguageQueries,
+  QueryContent,
+} from '@/core/types';
 
 export type QueryTypes = keyof LanguageQueries;
 export type Queries = Map<QueryTypes, Query>;
@@ -87,9 +91,14 @@ export async function initLanguage(
   definition: LanguageDefinition,
   definitions: Record<string, LanguageDefinition> = {},
 ): Promise<LoadedLanguage> {
+  if (!definition.grammar) {
+    throw new Error(
+      'LanguageDefinition is missing a "grammar" field. Provide a path, URL, or Uint8Array to a tree-sitter .wasm grammar.',
+    );
+  }
+
   const queries: Queries = new Map();
   const language = await Language.load(definition.grammar);
-
   const queryTypes: QueryTypes[] = ['highlights', 'injections'];
 
   await Promise.all(
