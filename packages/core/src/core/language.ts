@@ -2,7 +2,11 @@ import { logger } from '@bagrajs/logger';
 import { Language, Query } from 'web-tree-sitter';
 import { parseModeline, stripModeline } from '@/core/modeline';
 import { resolveQuery } from '@/core/queries';
-import type { LanguageDefinition, LanguageQueries, QueryContent } from '@/core/types';
+import type {
+  LanguageDefinition,
+  LanguageQueries,
+  QueryContent,
+} from '@/core/types';
 
 export type QueryTypes = keyof LanguageQueries;
 export type Queries = Map<QueryTypes, Query>;
