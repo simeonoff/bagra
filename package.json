@@ -22,11 +22,14 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "biome check .",
-    "lint:fix": "biome check --write ."
+    "lint:fix": "biome check --write .",
+    "playground": "npm run preview --workspace=@bagrajs/playground"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.6",
     "@types/node": "^25.4.0",
+    "prettier": "^3.8.1",
+    "prettier-plugin-svelte": "^3.5.1",
     "vite": "^7.3.1",
     "vite-plugin-dts": "^4.5.4",
     "vitest": "^4.0.18"
