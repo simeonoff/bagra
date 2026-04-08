@@ -81,14 +81,15 @@
   }
 
   .toolbar {
+    --background: #1a1a1a;
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 1rem;
     padding: 0.75rem 1.25rem;
-    border-block-end: 1px solid rgb(255 255 255 / 8%);
-    background: rgb(255 255 255 / 3%);
+    border-block-end: 1px solid oklch(from var(--background) .8 c h / 8%);
+    background: oklch(from var(--background) l c h / 48%);
     backdrop-filter: blur(8px);
     position: sticky;
     top: 0;
