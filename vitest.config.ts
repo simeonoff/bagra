@@ -14,6 +14,7 @@ export default defineConfig({
       'packages/wasm',
       'packages/themes',
       'packages/rehype',
+      'packages/playground',
       {
         plugins: [wasmInlinePlugin()],
         resolve: {

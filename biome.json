@@ -1,7 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.6/schema.json",
   "vcs": {
-    "enabled": false,
+    "enabled": true,
     "clientKind": "git",
     "useIgnoreFile": true
   },
@@ -58,6 +58,40 @@
             "noConsole": "off"
           }
         }
+      }
+    },
+    {
+      "includes": ["packages/themes/**/*.ts"],
+      "linter": {
+        "enabled": false
+      },
+      "formatter": {
+        "enabled": false
+      },
+      "assist": {
+        "enabled": false
+      }
+    },
+    {
+      "includes": ["packages/playground/**/*.svelte"],
+      "formatter": {
+        "enabled": false
+      }
+    },
+    {
+      "includes": ["packages/playground/src/app.d.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noNamespace": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/languages/**/samples/**"],
+      "linter": {
+        "enabled": false
       }
     }
   ],
