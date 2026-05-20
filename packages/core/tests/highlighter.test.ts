@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { grammar, query } from '@bagrajs/test-utils';
-import type { Element } from 'hast';
+import type { Element, ElementContent } from 'hast';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createHighlighter } from '@/highlighter';
 import type { Highlighter } from '@/types';
@@ -319,7 +319,7 @@ describe('codeToHast', () => {
     const source = '$primary: blue;';
     const root = hl.codeToHast('scss', source);
 
-    function collectText(nodes: any[]): string {
+    function collectText(nodes: ElementContent[]): string {
       let text = '';
       for (const node of nodes) {
         if (node.type === 'text') text += node.value;
@@ -353,7 +353,7 @@ describe('codeToHast', () => {
     const pre = root.children[0] as Element;
     const code = pre.children[0] as Element;
 
-    function findHighlightSpans(nodes: any[]): Element[] {
+    function findHighlightSpans(nodes: ElementContent[]): Element[] {
       const spans: Element[] = [];
       for (const node of nodes) {
         if (node.type === 'element' && node.tagName === 'span') {

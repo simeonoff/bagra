@@ -1,0 +1,87 @@
+// TODO: add dark mode variant
+$primary: #3b82f6;
+$secondary: #8b5cf6;
+$font-size-base: 1rem;
+$spacing-unit: 0.25rem;
+
+// NOTE: these mixins are used across multiple components
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin responsive($breakpoint) {
+  @if $breakpoint == sm {
+    @media (min-width: 640px) {
+      @content;
+    }
+  } @else if $breakpoint == md {
+    @media (min-width: 768px) {
+      @content;
+    }
+  } @else if $breakpoint == lg {
+    @media (min-width: 1024px) {
+      @content;
+    }
+  }
+}
+
+%card-base {
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 12%);
+  overflow: hidden;
+}
+
+.button {
+  @include flex-center;
+
+  padding: $spacing-unit * 3 $spacing-unit * 6;
+  background-color: $primary;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: $font-size-base;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+
+  &:hover {
+    background-color: darken($primary, 10%);
+  }
+
+  &--secondary {
+    background-color: $secondary;
+
+    &:hover {
+      background-color: darken($secondary, 10%);
+    }
+  }
+
+  @include responsive(md) {
+    padding: $spacing-unit * 4 $spacing-unit * 8;
+  }
+}
+
+.card {
+  @extend %card-base;
+
+  padding: $spacing-unit * 6;
+  background: white;
+
+  &__title {
+    font-size: $font-size-base * 1.25;
+    font-weight: 600;
+    margin-bottom: $spacing-unit * 2;
+  }
+
+  &__body {
+    color: #6b7280;
+    line-height: 1.6;
+  }
+
+  // FIXME: contrast ratio fails WCAG AA on light backgrounds
+  &__footer {
+    border-top: 1px solid #e5e7eb;
+    padding-top: $spacing-unit * 3;
+  }
+}
