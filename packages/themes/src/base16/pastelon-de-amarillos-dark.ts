@@ -1,0 +1,26 @@
+import type { BagraTheme } from '@bagrajs/core';
+
+export const pastelonDeAmarillosDark: BagraTheme = {
+  name: 'pastelon-de-amarillos-dark',
+  displayName: 'Pastelón de Amarillos Dark',
+  variant: 'dark',
+  author: 'Richard Martinez (https://sonofmartinus.com)',
+  colors: {
+    base00: '#180d18',
+    base01: '#2a1424',
+    base02: '#432031',
+    base03: '#a0747c',
+    base04: '#c39a89',
+    base05: '#ffe0a3',
+    base06: '#ffebc5',
+    base07: '#fff7e6',
+    base08: '#ff646a',
+    base09: '#f99a32',
+    base0A: '#ffc84a',
+    base0B: '#3ccb83',
+    base0C: '#35c4b6',
+    base0D: '#5a9fe6',
+    base0E: '#d978cf',
+    base0F: '#e2764a',
+  },
+};
