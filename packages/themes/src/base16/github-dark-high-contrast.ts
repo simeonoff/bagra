@@ -1,8 +1,8 @@
 import type { BagraTheme } from '@bagrajs/core';
 
-export const githubDark: BagraTheme = {
-  name: 'github-dark',
-  displayName: 'Github Dark',
+export const githubDarkHighContrast: BagraTheme = {
+  name: 'github-dark-high-contrast',
+  displayName: 'Github Dark High Contrast',
   variant: 'dark',
   author: 'Tinted Theming (https://github.com/tinted-theming)',
   colors: {
@@ -14,13 +14,13 @@ export const githubDark: BagraTheme = {
     base05: '#d1d7e0',
     base06: '#f0f6fc',
     base07: '#ffffff',
-    base08: '#ff7b72',
-    base09: '#ffa657',
-    base0A: '#d29922',
-    base0B: '#3fb950',
+    base08: '#ff9492',
+    base09: '#ffb757',
+    base0A: '#f0b72f',
+    base0B: '#28d751',
     base0C: '#39c5cf',
-    base0D: '#58a6ff',
-    base0E: '#be8fff',
-    base0F: '#ffa198',
+    base0D: '#71b7ff',
+    base0E: '#cb9eff',
+    base0F: '#ffb1af',
   },
 };
